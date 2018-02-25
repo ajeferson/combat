@@ -1,4 +1,4 @@
-package br.com.ajeferson.combat.view
+package br.com.ajeferson.combat.view.view.activity
 
 import android.content.Context
 import android.content.Intent

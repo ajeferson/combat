@@ -1,4 +1,4 @@
-package br.com.ajeferson.combat.view
+package br.com.ajeferson.combat.view.view.activity
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
