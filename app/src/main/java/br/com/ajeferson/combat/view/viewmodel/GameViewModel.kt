@@ -4,18 +4,22 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableField
 import br.com.ajeferson.combat.view.extension.value
+import br.com.ajeferson.combat.view.service.connection.ConnectionManager
 import br.com.ajeferson.combat.view.service.model.ChatMessage
-import br.com.ajeferson.combat.view.service.repository.ChatMessageRepository
+import br.com.ajeferson.combat.view.service.repository.ChatRepository
+import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
+import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
 /**
  * Created by ajeferson on 20/02/2018.
  */
-class GameViewModel: ViewModel() {
+class GameViewModel(private val connectionManager: ConnectionManager,
+                    private val chatRepository: ChatRepository): ViewModel() {
 
     val messages = MutableLiveData<ChatMessage>()
-    val status = ObservableField(Status.NONE)
+    val status = ObservableField(Status.DISCONNECTED)
     val liveStatus = MutableLiveData<Status>()
 
     private fun setStatus(status: Status) {
@@ -24,14 +28,16 @@ class GameViewModel: ViewModel() {
     }
 
     fun onCreate() {
+        subscribeToConnectionStatus()
         subscribeToChatMessages()
-
+        connectionManager.connect()
     }
 
     fun onStart() {
     }
 
     fun onResume() {
+
     }
 
     fun onDestroy() {
@@ -39,23 +45,36 @@ class GameViewModel: ViewModel() {
     }
 
     private fun subscribeToChatMessages() {
-
-        val repository = ChatMessageRepository()
-        repository
+        chatRepository
                 .messages
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     messages.value = it
                 }
+    }
 
+    private fun subscribeToConnectionStatus() {
+        connectionManager
+                .status
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    setStatus(when(it) {
+                        ConnectionStatus.CONNECTING -> CONNECTING
+                        ConnectionStatus.CONNECTED -> CONNECTED
+                        else -> DISCONNECTED
+                    })
+                }
     }
 
 
     enum class Status {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
         NONE,
         PLAYING
-
     }
 
 }

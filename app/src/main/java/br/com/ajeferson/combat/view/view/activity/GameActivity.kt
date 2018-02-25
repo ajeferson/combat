@@ -13,20 +13,27 @@ import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
+import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
+import dagger.android.AndroidInjection
+import javax.inject.Inject
 
 class GameActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityGameBinding
     lateinit var viewModel: GameViewModel
 
+    @Inject
+    lateinit var factory: GameViewModelFactory
+
     private val chatAdapter: ChatRecyclerViewAdapter by lazy {
         ChatRecyclerViewAdapter()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_game)
-        viewModel = ViewModelProviders.of(this).get(GameViewModel::class.java)
+        viewModel = ViewModelProviders.of(this, factory).get(GameViewModel::class.java)
 
         binding.chatRv.adapter = chatAdapter
         binding.chatRv.layoutManager = LinearLayoutManager(this)
