@@ -12,7 +12,9 @@ import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 /**
  * Created by ajeferson on 26/02/2018.
  */
-class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>, pieces: MutableList<MutableList<Piece?>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
+class BoardRecyclerViewAdapter(
+        board: List<List<BoardItemKind>>,
+        pieces: MutableList<MutableList<Piece?>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
 
     var board = board
         set(value) {
@@ -26,6 +28,8 @@ class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>, pieces: Mutable
             notifyDataSetChanged()
         }
 
+    var onItemClick: ((Int, Int) -> Unit)? = null
+
     private val size get() = board.size
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
@@ -38,14 +42,15 @@ class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>, pieces: Mutable
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val (row, column) = position.toCoordinates(size)
-        holder.bind(board[row][column], pieces[row][column])
+        holder.bind(board[row][column], pieces[row][column], row, column, onItemClick)
     }
 
     class ViewHolder(private val binding: RvItemBoardBinding): RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(kind: BoardItemKind, piece: Piece?) {
+        fun bind(kind: BoardItemKind, piece: Piece?, row: Int, column: Int, onItemClick: ((Int, Int) -> Unit)?) {
             binding.kind = kind
             binding.piece = piece
+            binding.root.setOnClickListener { onItemClick?.let { it(row, column) } }
             binding.executePendingBindings()
         }
 

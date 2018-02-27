@@ -50,6 +50,7 @@ class GameActivity : AppCompatActivity() {
         binding.gameRv.layoutManager = GridLayoutManager(this, viewModel.board.size)
         boardAdapter.board = viewModel.board
         boardAdapter.pieces = viewModel.pieces
+        boardAdapter.onItemClick = viewModel.onPieceClick
 
         binding.executePendingBindings()
 

@@ -73,6 +73,10 @@ class GameViewModel(private val connectionManager: ConnectionManager,
                 }
     }
 
+    val onPieceClick: (Int, Int) -> Unit = { row, column ->
+        println("Selected $row $column")
+    }
+
     val board: List<List<BoardItemKind>> = listOf(
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
