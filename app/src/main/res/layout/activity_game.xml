@@ -30,7 +30,7 @@
             android:id="@+id/game_rv"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@android:color/holo_green_dark"
+            android:background="@android:color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/chat_rv"
             app:layout_constraintStart_toEndOf="@+id/logs_rv"

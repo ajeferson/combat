@@ -8,6 +8,8 @@ import br.com.ajeferson.combat.view.service.connection.ConnectionManager
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.repository.ChatRepository
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
+import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
+import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -28,9 +30,9 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     }
 
     fun onCreate() {
-        subscribeToConnectionStatus()
-        subscribeToChatMessages()
-        connectionManager.connect()
+//        subscribeToConnectionStatus()
+//        subscribeToChatMessages()
+//        connectionManager.connect()
     }
 
     fun onStart() {
@@ -67,6 +69,19 @@ class GameViewModel(private val connectionManager: ConnectionManager,
                     })
                 }
     }
+
+    val board: List<List<BoardItemKind>> = listOf(
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, WATER, WATER, LAND, LAND, WATER, WATER, LAND, LAND),
+            listOf(LAND, LAND, WATER, WATER, LAND, LAND, WATER, WATER, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
+            listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND)
+    )
 
 
     enum class Status {

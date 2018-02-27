@@ -7,10 +7,12 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
+import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
@@ -29,14 +31,24 @@ class GameActivity : AppCompatActivity() {
         ChatRecyclerViewAdapter()
     }
 
+    private val boardAdapter: BoardRecyclerViewAdapter by lazy {
+        BoardRecyclerViewAdapter(listOf())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_game)
         viewModel = ViewModelProviders.of(this, factory).get(GameViewModel::class.java)
 
+        // Chat Adapter
         binding.chatRv.adapter = chatAdapter
         binding.chatRv.layoutManager = LinearLayoutManager(this)
+
+        // Board Adapter
+        binding.gameRv.adapter = boardAdapter
+        binding.gameRv.layoutManager = GridLayoutManager(this, viewModel.board.size)
+        boardAdapter.board = viewModel.board
 
         binding.executePendingBindings()
 
