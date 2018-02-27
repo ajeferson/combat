@@ -9,6 +9,10 @@
             name="kind"
             type="br.com.ajeferson.combat.view.view.enumeration.BoardItemKind" />
 
+        <variable
+            name="piece"
+            type="br.com.ajeferson.combat.view.service.model.Piece" />
+
     </data>
 
     <android.support.constraint.ConstraintLayout
@@ -31,6 +35,21 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:background="@color/brownLand" />
+
+        <ImageView
+            android:id="@+id/piece_iv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="@+id/board_item_bg"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/board_item_bg"
+            app:layout_constraintTop_toTopOf="@+id/board_item_bg"
+            tools:src="@drawable/ic_soldier"
+            app:piece="@{piece}" />
 
     </android.support.constraint.ConstraintLayout>
 

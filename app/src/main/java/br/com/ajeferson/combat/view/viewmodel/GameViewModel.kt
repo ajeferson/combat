@@ -8,8 +8,11 @@ import br.com.ajeferson.combat.view.service.connection.ConnectionManager
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.repository.ChatRepository
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
+import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
+import br.com.ajeferson.combat.view.view.enumeration.Owner.*
+import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -82,6 +85,12 @@ class GameViewModel(private val connectionManager: ConnectionManager,
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND)
     )
+
+    val pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
+
+    init {
+        pieces[0][0] = Piece(COLONEL, SELF)
+    }
 
 
     enum class Status {

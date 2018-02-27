@@ -6,14 +6,21 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.RvItemBoardBinding
+import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 
 /**
  * Created by ajeferson on 26/02/2018.
  */
-class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
+class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>, pieces: MutableList<MutableList<Piece?>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
 
     var board = board
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
+    var pieces = pieces
         set(value) {
             field = value
             notifyDataSetChanged()
@@ -31,13 +38,14 @@ class BoardRecyclerViewAdapter(board: List<List<BoardItemKind>>): RecyclerView.A
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val (row, column) = position.toCoordinates(size)
-        holder.bind(board[row][column])
+        holder.bind(board[row][column], pieces[row][column])
     }
 
     class ViewHolder(private val binding: RvItemBoardBinding): RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(kind: BoardItemKind) {
+        fun bind(kind: BoardItemKind, piece: Piece?) {
             binding.kind = kind
+            binding.piece = piece
             binding.executePendingBindings()
         }
 

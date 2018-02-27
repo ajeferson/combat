@@ -32,7 +32,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private val boardAdapter: BoardRecyclerViewAdapter by lazy {
-        BoardRecyclerViewAdapter(listOf())
+        BoardRecyclerViewAdapter(listOf(), mutableListOf())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +49,7 @@ class GameActivity : AppCompatActivity() {
         binding.gameRv.adapter = boardAdapter
         binding.gameRv.layoutManager = GridLayoutManager(this, viewModel.board.size)
         boardAdapter.board = viewModel.board
+        boardAdapter.pieces = viewModel.pieces
 
         binding.executePendingBindings()
 
