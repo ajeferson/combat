@@ -16,6 +16,8 @@ import java.util.*
  */
 class SocketConnectionManager(private val ip: String, private val port: Int): ConnectionManager {
 
+    override var id: Long = -1L
+
     override var status = PublishSubject.create<ConnectionStatus>()
     override val messages = PublishSubject.create<Message>()
 
@@ -30,7 +32,7 @@ class SocketConnectionManager(private val ip: String, private val port: Int): Co
             do {
                 val rawMessage = reader.nextLine()
                 if(rawMessage != null) {
-                    messages.onNext(Message.from(rawMessage))
+                    didReceive(Message.from(rawMessage))
                 }
             } while(rawMessage != null)
         } catch (e: NoSuchElementException) {
@@ -53,7 +55,8 @@ class SocketConnectionManager(private val ip: String, private val port: Int): Co
                 }
     }
 
-    override fun sendMessage(message: String) {
+    override fun sendMessage(message: Message) {
+        message.senderId = id
         Completable
                 .complete()
                 .subscribeOn(Schedulers.io())
@@ -61,6 +64,15 @@ class SocketConnectionManager(private val ip: String, private val port: Int): Co
                     writer.println(message)
                     writer.flush()
                 }
+    }
+
+    private fun didReceive(message: Message) {
+        if(message.kind.isPlacePiece) {
+            val idStr = message.tokens[0] as String
+            id = idStr.toLong()
+        }
+        message.setOwnerFromId(id)
+        messages.onNext(message)
     }
 
 }

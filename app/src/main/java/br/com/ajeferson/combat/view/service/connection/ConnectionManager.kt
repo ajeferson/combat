@@ -11,9 +11,10 @@ interface ConnectionManager {
     val connection: Any
     val status: Subject<ConnectionStatus>
     val messages: Subject<Message>
+    var id: Long
 
     fun connect()
-    fun sendMessage(message: String)
+    fun sendMessage(message: Message)
 
     enum class ConnectionStatus {
         CONNECTING,

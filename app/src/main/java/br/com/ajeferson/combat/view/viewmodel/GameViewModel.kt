@@ -9,13 +9,14 @@ import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.repository.ChatRepository
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
 import br.com.ajeferson.combat.view.service.message.MessageKind
+import br.com.ajeferson.combat.view.service.model.Coordinates
 import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.view.enumeration.Owner.*
+import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
@@ -29,6 +30,25 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     val status = ObservableField(Status.DISCONNECTED)
     val liveStatus = MutableLiveData<Status>()
 
+    val placedPieceCoordinates = MutableLiveData<Coordinates>()
+
+    private val initialAvailablePieces = mapOf(
+            SOLDIER to 8,
+            BOMB to 6,
+            GUNNER to 5,
+            SERGEANT to 4,
+            TENANT to 4,
+            CAPTAIN to 4,
+            MAJOR to 3,
+            COLONEL to 2,
+            GENERAL to 1,
+            MARSHAL to 1,
+            SPY to 1,
+            PRISONER to 1
+    )
+
+    var availablePieces = mutableMapOf<PieceKind, Int>()
+
     private fun setStatus(status: Status) {
         liveStatus.value = status
         this.status.value = status
@@ -36,8 +56,8 @@ class GameViewModel(private val connectionManager: ConnectionManager,
 
     fun onCreate() {
         subscribeToConnectionStatus()
-        subscribeToChatMessages()
-        subscribeToLogMessages()
+        subscribeToChat()
+        subscribeToMessages()
     }
 
     fun onStart() {
@@ -51,7 +71,7 @@ class GameViewModel(private val connectionManager: ConnectionManager,
 
     }
 
-    private fun subscribeToChatMessages() {
+    private fun subscribeToChat() {
         chatRepository
                 .messages
                 .subscribeOn(Schedulers.io())
@@ -78,7 +98,7 @@ class GameViewModel(private val connectionManager: ConnectionManager,
                 })
     }
 
-    private fun subscribeToLogMessages() {
+    private fun subscribeToMessages() {
         connectionManager
                 .messages
                 .subscribeOn(Schedulers.io())
@@ -89,9 +109,15 @@ class GameViewModel(private val connectionManager: ConnectionManager,
                         return@subscribe
                     }
 
+                    // TODO Refactor
                     setStatus(when(it.kind) {
                         MessageKind.WAIT_OPPONENT -> WAITING_OPPONENT
-                        else -> NONE
+                        MessageKind.OPPONENT_GIVE_UP -> OPPONENT_GIVE_UP
+                        MessageKind.PLACE_PIECES -> {
+                            resetAvailablePieces()
+                            PLACING_PIECES
+                        }
+                        MessageKind.CHAT -> NONE
                     })
 
                 }, {
@@ -103,8 +129,23 @@ class GameViewModel(private val connectionManager: ConnectionManager,
         connectionManager.connect()
     }
 
-    val onPieceClick: (Int, Int) -> Unit = { row, column ->
-        println("Selected $row $column")
+
+    private fun resetAvailablePieces() {
+        initialAvailablePieces.forEach { availablePieces[it.key] = it.value }
+    }
+
+    val didClickPiece: (Int, Int) -> Unit = click@ { row, column ->
+
+        val status = this.status.value ?: return@click
+
+        if(status.isPlacingPieces) {
+            placedPieceCoordinates.value = Coordinates(row, column)
+        }
+
+    }
+
+    fun selectPiece(pieceKind: PieceKind) {
+
     }
 
     val board: List<List<BoardItemKind>> = listOf(
@@ -128,17 +169,16 @@ class GameViewModel(private val connectionManager: ConnectionManager,
 
 
     enum class Status {
-        DISCONNECTED, // Not connected to server at all
-        CONNECTING, // Waiting for a response to the connection request
-        CONNECTED, // Connected to server
-        WAITING_OPPONENT, // Waiting for the opponent to connect
-        PLACING_PIECES, // Should now starting placing pieces
-        WAITING_PLACING, // Waiting for opponent to finish placing his/her pieces
-        GAME_STARTED, //
         NONE,
-        PLACING,
+        DISCONNECTED,           // Not connected to server at all
+        CONNECTING,             // Waiting for a response to the connection request
+        CONNECTED,              // Connected to server
+        WAITING_OPPONENT,       // Waiting for the opponent to connect
+        OPPONENT_GIVE_UP,       // Opponent has given up
+        PLACING_PIECES;         // Should now starting placing pieces
 
-        PLAYING
+        val isPlacingPieces get() = this == PLACING_PIECES
+
     }
 
 }

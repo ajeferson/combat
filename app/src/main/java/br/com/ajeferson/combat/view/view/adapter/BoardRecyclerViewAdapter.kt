@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.RvItemBoardBinding
+import br.com.ajeferson.combat.view.service.model.Coordinates
 import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 
@@ -56,12 +57,10 @@ class BoardRecyclerViewAdapter(
 
     }
 
-    data class Coordinates(val row: Int, val column: Int)
-
-    private fun Int.toCoordinates(size: Int): BoardRecyclerViewAdapter.Coordinates {
+    private fun Int.toCoordinates(size: Int): Coordinates {
         val row = this / size
         val column = this - (size * row)
-        return BoardRecyclerViewAdapter.Coordinates(row, column)
+        return Coordinates(row, column)
     }
 
 }

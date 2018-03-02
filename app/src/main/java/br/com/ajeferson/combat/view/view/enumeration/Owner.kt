@@ -5,5 +5,6 @@ package br.com.ajeferson.combat.view.view.enumeration
  */
 enum class Owner {
     SELF,
-    ENEMY
+    OPPONENT,
+    SERVER
 }

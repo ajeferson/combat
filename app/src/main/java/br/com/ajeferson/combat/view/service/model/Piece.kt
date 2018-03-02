@@ -9,6 +9,6 @@ import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 data class Piece(val kind: PieceKind, val owner: Owner) {
 
     val belongsToSelf get() = owner == Owner.SELF
-    val belongsToEnemy get() = owner == Owner.ENEMY
+    val belongsToEnemy get() = owner == Owner.OPPONENT
 
 }

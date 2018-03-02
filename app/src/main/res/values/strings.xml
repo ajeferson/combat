@@ -2,4 +2,20 @@
     <string name="app_name">combat</string>
     <string name="combat">Combat</string>
     <string name="connect">Connect</string>
+
+    <!--Pieces-->
+    <string name="spy">Spy</string>
+    <string name="soldier">Soldier</string>
+    <string name="gunner">Gunner</string>
+    <string name="sergeant">Sergeant</string>
+    <string name="tenant">Tenant</string>
+    <string name="captain">Captain</string>
+    <string name="major">Major</string>
+    <string name="colonel">Colonel</string>
+    <string name="marshal">Marshal</string>
+    <string name="prisoner">Prisoner</string>
+    <string name="bomb">Bomb</string>
+    <string name="general">General</string>
+    <string name="select_a_piece">Select a piece</string>
+
 </resources>

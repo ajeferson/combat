@@ -3,10 +3,12 @@ package br.com.ajeferson.combat.view.view.activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
@@ -14,9 +16,10 @@ import android.view.MenuItem
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
-import br.com.ajeferson.combat.view.service.model.ChatMessage.Kind.*
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
+import br.com.ajeferson.combat.view.view.enumeration.Owner
+import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
@@ -54,7 +57,7 @@ class GameActivity : AppCompatActivity() {
         binding.gameRv.layoutManager = GridLayoutManager(this, viewModel.board.size)
         boardAdapter.board = viewModel.board
         boardAdapter.pieces = viewModel.pieces
-        boardAdapter.onItemClick = viewModel.onPieceClick
+        boardAdapter.onItemClick = viewModel.didClickPiece
 
         binding.executePendingBindings()
 
@@ -94,6 +97,7 @@ class GameActivity : AppCompatActivity() {
     private fun observe() {
         viewModel.messages.observe(this, Observer { it?.let { handleChatMessage(it) } })
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
+        viewModel.placedPieceCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog() } })
     }
 
     private fun handleChatMessage(message: ChatMessage) {
@@ -101,16 +105,51 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun handleStatusChange(status: GameViewModel.Status) {
-        when(status) {
-            CONNECTING -> chatAdapter.addMessage(ChatMessage("Conectando ao servidor...", LOG))
-            CONNECTED -> chatAdapter.addMessage(ChatMessage("Conectado", LOG))
-            DISCONNECTED -> chatAdapter.addMessage(ChatMessage("Desconectado", LOG))
-            WAITING_OPPONENT -> chatAdapter.addMessage(ChatMessage("Esperando oponente...", LOG))
-            else -> Unit
+
+        val logMessage = when(status) {
+            NONE -> ""
+            CONNECTING -> "Conectando ao servidor..."
+            CONNECTED -> "Conectado"
+            DISCONNECTED -> "Desconectado"
+            WAITING_OPPONENT -> "Esperando oponente..."
+            PLACING_PIECES -> "Posicione suas peças"
+            OPPONENT_GIVE_UP -> "Oponente desistiu"
         }
+
+        chatAdapter.addMessage(ChatMessage(logMessage, Owner.SERVER))
+
+    }
+
+    private fun presentPlacePickerDialog() {
+
+        val kinds = viewModel
+                .availablePieces
+                .map { it.key }
+                .sortedByDescending { it.toString() }
+                .reversed()
+
+        val items = kinds.map {
+            val amount = viewModel.availablePieces[it]!!
+            "${getString(it.descriptionId)} x$amount"
+        }.toTypedArray()
+
+        AlertDialog
+                .Builder(this)
+                .setTitle(getString(R.string.select_a_piece))
+                .setItems(items, { _, index ->
+                    didSelectPieceToPlace(kinds[index])
+                })
+                .show()
+
+    }
+
+    private fun didSelectPieceToPlace(kind: PieceKind) {
+
     }
 
     companion object {
+
+        private const val TAG = "Game"
 
         fun newIntent(context: Context) = Intent(context, GameActivity::class.java)
 
