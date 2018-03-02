@@ -16,6 +16,7 @@ import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.model.Coordinates
+import br.com.ajeferson.combat.view.service.model.Move
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
@@ -99,9 +100,10 @@ class GameActivity : AppCompatActivity() {
     private fun observe() {
         viewModel.messages.observe(this, Observer { it?.let { handleChatMessage(it) } })
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
-        viewModel.placedCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog(it.copy()) } })
+        viewModel.placedCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog(it) } })
         viewModel.placedPiece.observe(this, Observer { it?.let { boardAdapter.placePiece(it) } })
         viewModel.error.observe(this, Observer { it?.let { handleError(it) } })
+        viewModel.move.observe(this, Observer { it?.let { handleMove(it) } })
     }
 
     private fun handleError(error: GameViewModel.Error) {
@@ -145,6 +147,10 @@ class GameActivity : AppCompatActivity() {
             chatAdapter.addMessage(ChatMessage(logMessage, Owner.SERVER))
         }
 
+    }
+
+    private fun handleMove(move: Move) {
+        boardAdapter.makeMove(mo)
     }
 
     private fun presentPlacePickerDialog(coordinates: Coordinates) {

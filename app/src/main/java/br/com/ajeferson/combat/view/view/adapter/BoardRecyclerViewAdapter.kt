@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.RvItemBoardBinding
 import br.com.ajeferson.combat.view.service.model.Coordinates
+import br.com.ajeferson.combat.view.service.model.Move
 import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
@@ -54,6 +55,14 @@ class BoardRecyclerViewAdapter(
         notifyDataSetChanged()
     }
 
+    fun makeMove(move: Move) {
+        val (from, to) = move
+        val temp = pieces[from.row][from.column]
+        pieces[from.row][from.column] = pieces[to.row][to.column]?.copy()
+        pieces[to.row][to.column] = temp?.copy()
+        notifyDataSetChanged()
+    }
+
     class ViewHolder(private val binding: RvItemBoardBinding): RecyclerView.ViewHolder(binding.root) {
 
         fun bind(kind: BoardItemKind, piece: Piece?, row: Int, column: Int, onItemClick: ((Int, Int) -> Unit)?) {
@@ -68,7 +77,7 @@ class BoardRecyclerViewAdapter(
     private fun Int.toCoordinates(size: Int): Coordinates {
         val row = this / size
         val column = this - (size * row)
-        return Coordinates(row, column)
+        return Coordinates.newInstance(row, column)
     }
 
 }

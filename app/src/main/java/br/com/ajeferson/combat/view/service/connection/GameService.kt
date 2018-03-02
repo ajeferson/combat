@@ -2,6 +2,8 @@ package br.com.ajeferson.combat.view.service.connection
 
 import br.com.ajeferson.combat.view.service.message.Message
 import br.com.ajeferson.combat.view.service.model.ChatMessage
+import br.com.ajeferson.combat.view.service.model.Coordinates
+import br.com.ajeferson.combat.view.service.model.Move
 import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import io.reactivex.subjects.Subject
@@ -15,12 +17,14 @@ interface GameService {
     val status: Subject<GameStatus>
     val chats: Subject<ChatMessage>
     val placedPieces: Subject<PieceCoordinatesDto>
+    val moves: Subject<Move>
 
     var id: Long
 
     fun connect()
     fun disconnect()
     fun sendMessage(message: Message)
+    fun sendMove(from: Coordinates, to: Coordinates)
 
     // One for each Message Kind
     fun waitForOpponent()

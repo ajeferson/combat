@@ -12,6 +12,7 @@ enum class MessageKind {
     READY,
     TURN,
     OPPONENT_TURN,
+    MOVE,
     CHAT;
 
     val message get() = Message(kind = this)

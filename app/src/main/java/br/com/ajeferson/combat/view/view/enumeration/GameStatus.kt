@@ -16,5 +16,6 @@ enum class GameStatus {
     OPPONENT_TURN;          // Opponent's turn
 
     val isPlacingPieces get() = this == PLACING_PIECES
+    val isTurn get() = this == TURN
 
 }

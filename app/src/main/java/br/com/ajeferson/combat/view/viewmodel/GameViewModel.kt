@@ -5,11 +5,8 @@ import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableField
 import br.com.ajeferson.combat.view.extension.value
 import br.com.ajeferson.combat.view.service.connection.GameService
-import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.message.MessageKind
-import br.com.ajeferson.combat.view.service.model.Coordinates
-import br.com.ajeferson.combat.view.service.model.Piece
-import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
+import br.com.ajeferson.combat.view.service.model.*
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
@@ -28,11 +25,14 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     val status = ObservableField(DISCONNECTED)
     val liveStatus = MutableLiveData<GameStatus>()
     val error = MutableLiveData<Error>()
+    var move = MutableLiveData<Move>()
 
     val placedCoordinates = MutableLiveData<Coordinates>()
     val placedPiece = MutableLiveData<PieceCoordinatesDto>()
 
     lateinit var pieces: MutableList<MutableList<Piece?>>
+
+    var moveCoordinate: Coordinates? = null
 
     private val initialAvailablePieces = mapOf(
 //            SOLDIER to 8,
@@ -70,6 +70,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         subscribeToStatus()
         subscribeToChats()
         subscribeToPlacedPieces()
+        subscribeToMoves()
     }
 
     fun onStart() {
@@ -125,6 +126,16 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 }
     }
 
+    private fun subscribeToMoves() {
+        gameService
+                .moves
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    move.value = it
+                }
+    }
+
 
 
     /**
@@ -148,16 +159,6 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
     private fun placePiece(dto: PieceCoordinatesDto) {
 
-        // Pre process piece
-        if(dto.piece.belongsToOpponent) {
-            dto.apply {
-                var (newRow, newColumn) = dto.coordinates
-                newRow = 9 - newRow
-                newColumn = 9 - newColumn
-                dto.coordinates = Coordinates(newRow, newColumn)
-            }
-        }
-
         // Place the piece
         val (row, column) = dto.coordinates
         pieces[row][column] = dto.piece.copy()
@@ -174,6 +175,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
         // Ready to play
         if(availablePiecesCount == 0) {
+            setStatus(READY)
             gameService.sendMessage(MessageKind.READY.message)
         }
 
@@ -214,12 +216,24 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
         val status = this.status.value ?: return@click
 
+        val coordinates = Coordinates.newInstance(row, column)
+
         if(status.isPlacingPieces) {
             if(row < 6 || pieces[row][column] != null) {
                 error.value = Error.PLACE_PIECE_INVALID_COORDINATES
                 return@click
             }
-            placedCoordinates.value = Coordinates(row, column)
+            placedCoordinates.value = coordinates
+        }
+
+        // TODO Validate moveCoordinate
+        if(status.isTurn) {
+            if(moveCoordinate == null) { // Select piece to moveCoordinate
+                moveCoordinate = coordinates
+            } else {
+                gameService.sendMove(moveCoordinate!!, coordinates)
+                moveCoordinate = null
+            }
         }
 
     }

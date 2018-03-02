@@ -5,10 +5,7 @@ import java.net.Socket
 import br.com.ajeferson.combat.view.service.message.Message
 import br.com.ajeferson.combat.view.service.message.MessageKind
 import br.com.ajeferson.combat.view.service.message.MessageKind.*
-import br.com.ajeferson.combat.view.service.model.ChatMessage
-import br.com.ajeferson.combat.view.service.model.Coordinates
-import br.com.ajeferson.combat.view.service.model.Piece
-import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
+import br.com.ajeferson.combat.view.service.model.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind
@@ -27,6 +24,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     override val status: Subject<GameStatus> = PublishSubject.create()
     override val chats: Subject<ChatMessage> = PublishSubject.create()
     override val placedPieces: Subject<PieceCoordinatesDto> = PublishSubject.create()
+    override val moves: Subject<Move> = PublishSubject.create()
 
     override var id: Long = -1L
 
@@ -84,6 +82,12 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
                 }
     }
 
+    override fun sendMove(from: Coordinates, to: Coordinates) {
+        val message = MessageKind.MOVE.message
+                .apply { addValues(from.row, from.column) } // From
+                .apply { addValues(to.row, to.column) }     // To
+        sendMessage(message)
+    }
 
     private fun didReceive(message: Message) {
 
@@ -91,7 +95,6 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
             WAIT_OPPONENT -> WAITING_OPPONENT
             MessageKind.OPPONENT_GIVE_UP -> GameStatus.OPPONENT_GIVE_UP
             PLACE_PIECES -> PLACING_PIECES
-            MessageKind.READY -> GameStatus.READY
             MessageKind.TURN -> GameStatus.TURN
             MessageKind.OPPONENT_TURN -> GameStatus.OPPONENT_TURN
             else -> null
@@ -108,6 +111,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
         when(message.kind) {
             CHAT -> handleChatMessage(message)
             PLACE_PIECE -> handlePlacePieceMessage(message)
+            MOVE -> handleMoveMessage(message)
             else -> Unit
         }
 
@@ -120,10 +124,32 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     }
 
     private fun handlePlacePieceMessage(message: Message) {
+
         val piece = Piece(kind = PieceKind.valueOf(message.tokens[0]), owner = message.owner)
-        val coordinates = Coordinates(row = message.tokens[1].toInt(), column = message.tokens[2].toInt())
+
+        val row = message.tokens[1].toInt()
+        val column = message.tokens[2].toInt()
+
+        val coordinates = Coordinates.newInstance(message.owner, row, column)
         val dto = PieceCoordinatesDto(piece = piece, coordinates = coordinates)
+
         placedPieces.onNext(dto)
+
+    }
+
+    private fun handleMoveMessage(message: Message) {
+
+        var row = message.tokens[0].toInt()
+        var column = message.tokens[1].toInt()
+        val from = Coordinates.newInstance(message.owner, row, column)
+
+        row = message.tokens[2].toInt()
+        column = message.tokens[3].toInt()
+        val to = Coordinates.newInstance(message.owner, row, column)
+
+        val move = Move(from, to)
+        moves.onNext(move)
+
     }
 
     private fun emitStatus(newStatus: GameStatus?) {
