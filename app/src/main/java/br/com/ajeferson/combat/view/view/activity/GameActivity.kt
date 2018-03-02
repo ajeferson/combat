@@ -99,6 +99,13 @@ class GameActivity : AppCompatActivity() {
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
         viewModel.placedCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog(it.copy()) } })
         viewModel.placedPiece.observe(this, Observer { it?.let { boardAdapter.placePiece(it) } })
+        viewModel.error.observe(this, Observer { it?.let { handleError(it) } })
+    }
+
+    private fun handleError(error: GameViewModel.Error) {
+        when(error) {
+            GameViewModel.Error.PLACE_PIECE_INVALID_COORDINATES -> presentErrorAlert("You can not place a piece here")
+        }
     }
 
     private fun handleChatMessage(message: ChatMessage) {
@@ -145,6 +152,15 @@ class GameActivity : AppCompatActivity() {
                 })
                 .show()
 
+    }
+
+    private fun presentErrorAlert(message: String) {
+        AlertDialog
+                .Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show()
     }
 
     companion object {

@@ -21,10 +21,9 @@ fun setBoardKindOnTextView(view: View, kind: BoardItemKind?) {
 
 @BindingAdapter("piece")
 fun setPieceOnImage(imageView: ImageView, piece: Piece?) {
-    piece?.let {
-        imageView.setBackgroundResource(when(it.owner) {
-            Owner.SELF -> it.kind.resId
-            else -> R.drawable.ic_question_mark
-        })
-    }
+    imageView.setBackgroundResource(when(piece?.owner) {
+        Owner.SELF -> piece.kind.resId
+        Owner.OPPONENT -> R.drawable.ic_question_mark
+        else -> 0
+    })
 }
