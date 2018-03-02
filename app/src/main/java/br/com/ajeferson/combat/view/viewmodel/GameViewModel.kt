@@ -33,9 +33,10 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     }
 
     fun onCreate() {
-//        subscribeToConnectionStatus()
-//        subscribeToChatMessages()
+        subscribeToConnectionStatus()
+        subscribeToChatMessages()
 //        connectionManager.connect()
+        setStatus(Status.DISCONNECTED)
     }
 
     fun onStart() {
@@ -62,15 +63,35 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     private fun subscribeToConnectionStatus() {
         connectionManager
                 .status
+                .first(ConnectionStatus.DISCONNECTED)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    setStatus(when(it) {
+                .subscribe({
+
+                    setStatus(when(status) {
                         ConnectionStatus.CONNECTING -> CONNECTING
                         ConnectionStatus.CONNECTED -> CONNECTED
                         else -> DISCONNECTED
                     })
-                }
+
+                    logMessage()
+
+                }, {
+                    // TODO Handle this
+                    setStatus(DISCONNECTED)
+                })
+    }
+
+    fun onConnectTouched() {
+        connectionManager.connect()
+    }
+
+    private fun logMessage() {
+        messages.value = ChatMessage(when(liveStatus.value) {
+            CONNECTED -> "Connected"
+            CONNECTING -> "Connecting"
+            else -> "Disconnected"
+        }, ChatMessage.Kind.LOG)
     }
 
     val onPieceClick: (Int, Int) -> Unit = { row, column ->
@@ -98,10 +119,16 @@ class GameViewModel(private val connectionManager: ConnectionManager,
 
 
     enum class Status {
-        DISCONNECTED,
-        CONNECTING,
-        CONNECTED,
+        DISCONNECTED, // Not connected to server at all
+        CONNECTING, // Waiting for a response to the connection request
+        CONNECTED, // Connected to server
+        WAITING_OPPONENT, // Waiting for the opponent to connect
+        PLACING_PIECES, // Should now starting placing pieces
+        WAITING_PLACING, // Waiting for opponent to finish placing his/her pieces
+        GAME_STARTED, //
         NONE,
+        PLACING,
+
         PLAYING
     }
 

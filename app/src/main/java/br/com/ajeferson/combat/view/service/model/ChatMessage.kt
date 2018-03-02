@@ -11,7 +11,7 @@ data class ChatMessage(val text: String, val kind: Kind) {
 
     enum class Kind {
         SELF,
-        ENEMY,
+        OPPONENT,
         LOG
     }
 

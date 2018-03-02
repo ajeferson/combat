@@ -9,9 +9,12 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
+import android.view.Menu
+import android.view.MenuItem
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
+import br.com.ajeferson.combat.view.service.model.ChatMessage.Kind.*
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
@@ -59,6 +62,11 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.activity_game_menu, menu)
+        return true
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.onResume()
@@ -75,6 +83,14 @@ class GameActivity : AppCompatActivity() {
         viewModel.onDestroy()
     }
 
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when(item?.itemId) {
+            R.id.menu_connect -> viewModel.onConnectTouched()
+            else -> Unit
+        }
+        return true
+    }
+
     private fun observe() {
         viewModel.messages.observe(this, Observer { it?.let { handleChatMessage(it) } })
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
@@ -85,6 +101,11 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun handleStatusChange(status: GameViewModel.Status) {
+        when(status) {
+            GameViewModel.Status.CONNECTING -> chatAdapter.addMessage(ChatMessage("Conectando ao servidor...", LOG))
+            GameViewModel.Status.CONNECTED -> chatAdapter.addMessage(ChatMessage("Conectado", LOG))
+            else -> chatAdapter.addMessage(ChatMessage("Desconectado", LOG))
+        }
     }
 
     companion object {
