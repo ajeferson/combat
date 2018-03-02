@@ -51,6 +51,9 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     )
 
     var availablePieces = mutableMapOf<PieceKind, Int>()
+    val availablePiecesCount get() = availablePieces
+            .map { it.value }
+            .reduce { a, b -> a + b }
 
     private fun setStatus(status: GameStatus) {
         liveStatus.value = status
@@ -119,6 +122,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     placedPiece.value = it
+                    placePiece(it.piece.kind)
                 }
     }
 
@@ -134,10 +138,6 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
     fun selectPiece(pieceKind: PieceKind, coordinates: Coordinates) {
 
-        // Reduce the current amount
-        val oldAmount = availablePieces[pieceKind] ?: return
-        availablePieces[pieceKind] = oldAmount - 1
-
         // Build the message
         val message = MessageKind
                 .PLACE_PIECE
@@ -148,6 +148,19 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
         // Send the message
         gameService.sendMessage(message)
+
+    }
+
+    private fun placePiece(kind: PieceKind) {
+
+        // Reduce the current amount
+        val oldAmount = availablePieces[kind] ?: return
+        availablePieces[kind] = oldAmount - 1
+
+        // Ready to play
+        if(availablePiecesCount == 0) {
+            gameService.sendMessage(MessageKind.READY.message)
+        }
 
     }
 

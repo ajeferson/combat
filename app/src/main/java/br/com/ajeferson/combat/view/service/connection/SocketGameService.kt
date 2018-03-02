@@ -82,6 +82,9 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
             WAIT_OPPONENT -> WAITING_OPPONENT
             MessageKind.OPPONENT_GIVE_UP -> GameStatus.OPPONENT_GIVE_UP
             PLACE_PIECES -> PLACING_PIECES
+            MessageKind.READY -> GameStatus.READY
+            MessageKind.TURN -> GameStatus.TURN
+            MessageKind.OPPONENT_TURN -> GameStatus.OPPONENT_TURN
             else -> null
         })
 

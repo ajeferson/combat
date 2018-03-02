@@ -114,6 +114,9 @@ class GameActivity : AppCompatActivity() {
             WAITING_OPPONENT -> "Esperando oponente..."
             PLACING_PIECES -> "Posicione suas peças"
             OPPONENT_GIVE_UP -> "Oponente desistiu"
+            READY -> if(viewModel.availablePiecesCount == 0) "Você está pronto para jogar" else "Seu oponente está pronto para jogar"
+            TURN -> "Sua vez de jogar"
+            OPPONENT_TURN -> "Esperando jogada do oponente"
         }
 
         chatAdapter.addMessage(ChatMessage(logMessage, Owner.SERVER))
