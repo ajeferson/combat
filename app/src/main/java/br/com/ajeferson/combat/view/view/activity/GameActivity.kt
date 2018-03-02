@@ -45,8 +45,12 @@ class GameActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
+
         binding = DataBindingUtil.setContentView(this, R.layout.activity_game)
+
         viewModel = ViewModelProviders.of(this, factory).get(GameViewModel::class.java)
+        observe()
+        viewModel.onCreate()
 
         // Chat Adapter
         binding.chatRv.adapter = chatAdapter
@@ -60,9 +64,6 @@ class GameActivity : AppCompatActivity() {
         boardAdapter.onItemClick = viewModel.didClickPiece
 
         binding.executePendingBindings()
-
-        observe()
-        viewModel.onCreate()
 
     }
 
@@ -89,6 +90,7 @@ class GameActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId) {
             R.id.menu_connect -> viewModel.onConnectTouched()
+            R.id.menu_give_up -> viewModel.onGiveUpTouched()
             else -> Unit
         }
         return true
@@ -105,6 +107,8 @@ class GameActivity : AppCompatActivity() {
     private fun handleError(error: GameViewModel.Error) {
         when(error) {
             GameViewModel.Error.PLACE_PIECE_INVALID_COORDINATES -> presentErrorAlert("You can not place a piece here")
+            GameViewModel.Error.ALREADY_CONNECTED -> presentErrorAlert("You are already connected to the server")
+            GameViewModel.Error.ALREADY_DISCONNECTED -> presentErrorAlert("You are already disconnected")
         }
     }
 
@@ -121,12 +125,25 @@ class GameActivity : AppCompatActivity() {
             WAITING_OPPONENT -> "Esperando oponente..."
             PLACING_PIECES -> "Posicione suas peças"
             OPPONENT_GIVE_UP -> "Oponente desistiu"
-            READY -> if(viewModel.availablePiecesCount == 0) "Você está pronto para jogar" else "Seu oponente está pronto para jogar"
+            READY -> ""
             TURN -> "Sua vez de jogar"
             OPPONENT_TURN -> "Esperando jogada do oponente"
         }
 
-        chatAdapter.addMessage(ChatMessage(logMessage, Owner.SERVER))
+        // Star over the game
+        if(status == DISCONNECTED) {
+            chatAdapter.clearMessages()
+            boardAdapter.pieces = viewModel.pieces
+        }
+
+        // Opponent has given up
+        if(status == OPPONENT_GIVE_UP) {
+            presentInfoAlert("Your opponent has given up this match, you won!")
+        }
+
+        if(!logMessage.isEmpty()) {
+            chatAdapter.addMessage(ChatMessage(logMessage, Owner.SERVER))
+        }
 
     }
 
@@ -155,9 +172,17 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun presentErrorAlert(message: String) {
+        presentAlert("Error", message)
+    }
+
+    private fun presentInfoAlert(message: String) {
+        presentAlert("Info", message)
+    }
+
+    private fun presentAlert(title: String, message: String) {
         AlertDialog
                 .Builder(this)
-                .setTitle("Error")
+                .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("OK", null)
                 .show()

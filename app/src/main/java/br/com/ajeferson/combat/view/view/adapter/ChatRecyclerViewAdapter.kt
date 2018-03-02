@@ -13,7 +13,11 @@ import br.com.ajeferson.combat.view.service.model.ChatMessage
  */
 class ChatRecyclerViewAdapter: RecyclerView.Adapter<ChatRecyclerViewAdapter.ViewHolder>() {
 
-    private val messages = mutableListOf<ChatMessage>()
+    private var messages = mutableListOf<ChatMessage>()
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent?.context)
@@ -28,6 +32,10 @@ class ChatRecyclerViewAdapter: RecyclerView.Adapter<ChatRecyclerViewAdapter.View
     fun addMessage(message: ChatMessage) {
         messages.add(message)
         notifyDataSetChanged()
+    }
+
+    fun clearMessages() {
+        messages = mutableListOf()
     }
 
     class ViewHolder(private val binding: RvItemChatBinding): RecyclerView.ViewHolder(binding.root) {

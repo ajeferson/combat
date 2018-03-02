@@ -19,6 +19,7 @@ interface GameService {
     var id: Long
 
     fun connect()
+    fun disconnect()
     fun sendMessage(message: Message)
 
     // One for each Message Kind

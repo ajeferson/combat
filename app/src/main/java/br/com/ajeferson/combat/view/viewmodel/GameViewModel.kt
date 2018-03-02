@@ -3,7 +3,6 @@ package br.com.ajeferson.combat.view.viewmodel
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableField
-import android.util.Log
 import br.com.ajeferson.combat.view.extension.value
 import br.com.ajeferson.combat.view.service.connection.GameService
 import br.com.ajeferson.combat.view.service.model.ChatMessage
@@ -15,7 +14,6 @@ import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
-import br.com.ajeferson.combat.view.view.enumeration.Owner
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -34,20 +32,20 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     val placedCoordinates = MutableLiveData<Coordinates>()
     val placedPiece = MutableLiveData<PieceCoordinatesDto>()
 
-    val pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
+    lateinit var pieces: MutableList<MutableList<Piece?>>
 
     private val initialAvailablePieces = mapOf(
-            SOLDIER to 8,
-            BOMB to 6,
-            GUNNER to 5,
-            SERGEANT to 4,
-            TENANT to 4,
-            CAPTAIN to 4,
-            MAJOR to 3,
-            COLONEL to 2,
-            GENERAL to 1,
-            MARSHAL to 1,
-            SPY to 1,
+//            SOLDIER to 8,
+//            BOMB to 6,
+//            GUNNER to 5,
+//            SERGEANT to 4,
+//            TENANT to 4,
+//            CAPTAIN to 4,
+//            MAJOR to 3,
+//            COLONEL to 2,
+//            GENERAL to 1,
+//            MARSHAL to 1,
+//            SPY to 1,
             PRISONER to 1
     )
 
@@ -68,6 +66,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
      * */
 
     fun onCreate() {
+        resetGame()
         subscribeToStatus()
         subscribeToChats()
         subscribeToPlacedPieces()
@@ -102,14 +101,14 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
 
-                    setStatus(it)
-
                     when(it) {
-                        PLACING_PIECES -> {
-                            resetAvailablePieces()
+                        DISCONNECTED -> {
+                            resetGame()
                         }
                         else -> Unit
                     }
+
+                    setStatus(it)
 
                 }, {
                     // TODO Handle
@@ -131,10 +130,6 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     /**
      * Pieces Placing
      * */
-
-    private fun resetAvailablePieces() {
-        initialAvailablePieces.forEach { availablePieces[it.key] = it.value }
-    }
 
     fun selectPiece(pieceKind: PieceKind, coordinates: Coordinates) {
 
@@ -168,6 +163,11 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         pieces[row][column] = dto.piece.copy()
         placedPiece.value = dto
 
+        // Should not decrease amount if it belongs to the opponent
+        if(dto.piece.belongsToOpponent) {
+            return
+        }
+
         // Reduce the current amount
         val oldAmount = availablePieces[dto.piece.kind] ?: return
         availablePieces[dto.piece.kind] = oldAmount - 1
@@ -187,7 +187,27 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
      * */
 
     fun onConnectTouched() {
+
+        if(status.value == CONNECTING) return
+
+        if(status.value != DISCONNECTED) {
+            error.value = Error.ALREADY_CONNECTED
+            return
+        }
+
         gameService.connect()
+
+    }
+
+    fun onGiveUpTouched() {
+
+        if(status.value == null || status.value == DISCONNECTED) {
+            error.value = Error.ALREADY_DISCONNECTED
+            return
+        }
+
+        gameService.disconnect()
+
     }
 
     val didClickPiece: (Int, Int) -> Unit = click@ { row, column ->
@@ -204,6 +224,11 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
 
     }
 
+    private fun resetGame() {
+        pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
+        initialAvailablePieces.forEach { availablePieces[it.key] = it.value }
+    }
+
     val board: List<List<BoardItemKind>> = listOf(
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
@@ -218,7 +243,9 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     )
 
     enum class Error {
-        PLACE_PIECE_INVALID_COORDINATES
+        PLACE_PIECE_INVALID_COORDINATES,
+        ALREADY_CONNECTED,
+        ALREADY_DISCONNECTED
     }
 
 }

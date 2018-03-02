@@ -64,6 +64,15 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
                 }
     }
 
+    override fun disconnect() {
+        Completable
+                .complete()
+                .subscribeOn(Schedulers.io())
+                .subscribe {
+                    socket.close()
+                }
+    }
+
     override fun sendMessage(message: Message) {
         message.senderId = id
         Completable
