@@ -4,10 +4,10 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus.*
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
+import br.com.ajeferson.combat.view.service.message.Message
 import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
 import java.io.PrintWriter
 import java.util.*
 
@@ -16,16 +16,8 @@ import java.util.*
  */
 class SocketConnectionManager(private val ip: String, private val port: Int): ConnectionManager {
 
-    private lateinit var statusEmitter: ObservableEmitter<ConnectionStatus>
-    private lateinit var messagesEmitter: ObservableEmitter<String>
-
-    override val status: Observable<ConnectionStatus> = Observable.create<ConnectionStatus> {
-        statusEmitter = it
-    }
-
-    override val messages = Observable.create<String> {
-        messagesEmitter = it
-    }
+    override var status = PublishSubject.create<ConnectionStatus>()
+    override val messages = PublishSubject.create<Message>()
 
     override val connection get() = socket
     private lateinit var socket: Socket
@@ -34,12 +26,16 @@ class SocketConnectionManager(private val ip: String, private val port: Int): Co
     private lateinit var writer: PrintWriter
 
     private val messagesListener = Runnable {
-        do {
-            val message = reader.nextLine()
-            if(message != null) {
-                messagesEmitter.onNext(message)
-            }
-        } while(message != null)
+        try {
+            do {
+                val rawMessage = reader.nextLine()
+                if(rawMessage != null) {
+                    messages.onNext(Message.from(rawMessage))
+                }
+            } while(rawMessage != null)
+        } catch (e: NoSuchElementException) {
+            status.onNext(DISCONNECTED) // Lost connection with server
+        }
     }
 
     override fun connect() {
@@ -47,13 +43,13 @@ class SocketConnectionManager(private val ip: String, private val port: Int): Co
                 .complete()
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    statusEmitter.onNext(CONNECTING)
+                    status.onNext(CONNECTING)
                     socket = Socket()
                     socket.connect(InetSocketAddress(ip, port), 10000)
                     reader = Scanner(socket.getInputStream())
                     writer = PrintWriter(socket.getOutputStream())
                     Thread(messagesListener).start()
-                    statusEmitter.onNext(CONNECTED)
+                    status.onNext(CONNECTED)
                 }
     }
 

@@ -8,12 +8,14 @@ import br.com.ajeferson.combat.view.service.connection.ConnectionManager
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.repository.ChatRepository
 import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
+import br.com.ajeferson.combat.view.service.message.MessageKind
 import br.com.ajeferson.combat.view.service.model.Piece
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.view.enumeration.Owner.*
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
+import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
@@ -35,8 +37,7 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     fun onCreate() {
         subscribeToConnectionStatus()
         subscribeToChatMessages()
-//        connectionManager.connect()
-        setStatus(Status.DISCONNECTED)
+        subscribeToLogMessages()
     }
 
     fun onStart() {
@@ -63,35 +64,43 @@ class GameViewModel(private val connectionManager: ConnectionManager,
     private fun subscribeToConnectionStatus() {
         connectionManager
                 .status
-                .first(ConnectionStatus.DISCONNECTED)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-
-                    setStatus(when(status) {
+                    setStatus(when(it) {
                         ConnectionStatus.CONNECTING -> CONNECTING
                         ConnectionStatus.CONNECTED -> CONNECTED
                         else -> DISCONNECTED
                     })
-
-                    logMessage()
-
                 }, {
                     // TODO Handle this
                     setStatus(DISCONNECTED)
                 })
     }
 
-    fun onConnectTouched() {
-        connectionManager.connect()
+    private fun subscribeToLogMessages() {
+        connectionManager
+                .messages
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+
+                    if(it.kind.isChat) {
+                        return@subscribe
+                    }
+
+                    setStatus(when(it.kind) {
+                        MessageKind.WAIT_OPPONENT -> WAITING_OPPONENT
+                        else -> NONE
+                    })
+
+                }, {
+                    // TODO Handle
+                })
     }
 
-    private fun logMessage() {
-        messages.value = ChatMessage(when(liveStatus.value) {
-            CONNECTED -> "Connected"
-            CONNECTING -> "Connecting"
-            else -> "Disconnected"
-        }, ChatMessage.Kind.LOG)
+    fun onConnectTouched() {
+        connectionManager.connect()
     }
 
     val onPieceClick: (Int, Int) -> Unit = { row, column ->

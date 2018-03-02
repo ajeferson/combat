@@ -13,8 +13,12 @@ class ChatRepository @Inject constructor(private val connectionManager: Connecti
     // TODO Could be a flowable
     var messages = connectionManager
             .messages
+            .filter { it.kind.isChat }
             .map {
-                ChatMessage(it, ChatMessage.Kind.SELF)
+                val text = it.tokens[0] as? String
+                text?.let {
+                    ChatMessage(text, ChatMessage.Kind.SELF)
+                }
             }
 
     fun sendMessage(message: String) {

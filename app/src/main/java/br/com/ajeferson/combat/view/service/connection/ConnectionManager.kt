@@ -1,6 +1,7 @@
 package br.com.ajeferson.combat.view.service.connection
 
-import io.reactivex.Observable
+import br.com.ajeferson.combat.view.service.message.Message
+import io.reactivex.subjects.Subject
 
 /**
  * Created by ajeferson on 25/02/2018.
@@ -8,8 +9,8 @@ import io.reactivex.Observable
 interface ConnectionManager {
 
     val connection: Any
-    val status: Observable<ConnectionStatus>
-    val messages: Observable<String>
+    val status: Subject<ConnectionStatus>
+    val messages: Subject<Message>
 
     fun connect()
     fun sendMessage(message: String)

@@ -18,6 +18,7 @@ import br.com.ajeferson.combat.view.service.model.ChatMessage.Kind.*
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
+import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
 import dagger.android.AndroidInjection
 import javax.inject.Inject
@@ -57,7 +58,7 @@ class GameActivity : AppCompatActivity() {
 
         binding.executePendingBindings()
 
-
+        observe()
         viewModel.onCreate()
 
     }
@@ -70,7 +71,6 @@ class GameActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.onResume()
-        observe()
     }
 
     override fun onStart() {
@@ -102,9 +102,11 @@ class GameActivity : AppCompatActivity() {
 
     private fun handleStatusChange(status: GameViewModel.Status) {
         when(status) {
-            GameViewModel.Status.CONNECTING -> chatAdapter.addMessage(ChatMessage("Conectando ao servidor...", LOG))
-            GameViewModel.Status.CONNECTED -> chatAdapter.addMessage(ChatMessage("Conectado", LOG))
-            else -> chatAdapter.addMessage(ChatMessage("Desconectado", LOG))
+            CONNECTING -> chatAdapter.addMessage(ChatMessage("Conectando ao servidor...", LOG))
+            CONNECTED -> chatAdapter.addMessage(ChatMessage("Conectado", LOG))
+            DISCONNECTED -> chatAdapter.addMessage(ChatMessage("Desconectado", LOG))
+            WAITING_OPPONENT -> chatAdapter.addMessage(ChatMessage("Esperando oponente...", LOG))
+            else -> Unit
         }
     }
 
