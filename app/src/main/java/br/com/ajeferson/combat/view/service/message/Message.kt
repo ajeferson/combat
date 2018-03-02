@@ -8,7 +8,7 @@ import br.com.ajeferson.combat.view.view.enumeration.Owner
 data class Message(
         var senderId: Long = -1L,
         val kind: MessageKind,
-        val tokens: MutableList<Any> = mutableListOf()) {
+        val tokens: MutableList<String> = mutableListOf()) {
 
     var owner = Owner.SERVER
 
@@ -20,9 +20,14 @@ data class Message(
         }
     }
 
+    fun addValues(vararg values: Any) {
+        values.forEach { tokens.add(it.toString()) }
+    }
+
     override fun toString() = tokens.map { it }
             .toMutableList()
-            .apply { add(0, kind) }
+            .apply { add(0, senderId.toString()) }
+            .apply { add(1, kind.toString()) }
             .joinToString(SEPARATOR)
 
     companion object {
@@ -30,9 +35,9 @@ data class Message(
         private const val SEPARATOR = "|"
 
         fun from(raw: String): Message {
-            val tokens: List<Any> = raw.split(SEPARATOR)
+            val tokens: List<String> = raw.split(SEPARATOR)
             return Message(
-                    senderId = tokens[0] as? Long ?: -1,
+                    senderId = tokens[0].toLong(),
                     kind = MessageKind.valueOf(tokens[1] as? String ?: ""),
                     tokens = tokens
                             .toMutableList()

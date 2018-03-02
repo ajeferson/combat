@@ -8,6 +8,7 @@ import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.RvItemBoardBinding
 import br.com.ajeferson.combat.view.service.model.Coordinates
 import br.com.ajeferson.combat.view.service.model.Piece
+import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 
 /**
@@ -44,6 +45,12 @@ class BoardRecyclerViewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val (row, column) = position.toCoordinates(size)
         holder.bind(board[row][column], pieces[row][column], row, column, onItemClick)
+    }
+
+    fun placePiece(dto: PieceCoordinatesDto) {
+        val (row, colum) = dto.coordinates
+        pieces[row][colum] = dto.piece.copy()
+        notifyDataSetChanged()
     }
 
     class ViewHolder(private val binding: RvItemBoardBinding): RecyclerView.ViewHolder(binding.root) {

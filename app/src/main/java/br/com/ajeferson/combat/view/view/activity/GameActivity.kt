@@ -3,7 +3,6 @@ package br.com.ajeferson.combat.view.view.activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
@@ -16,12 +15,13 @@ import android.view.MenuItem
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
+import br.com.ajeferson.combat.view.service.model.Coordinates
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
+import br.com.ajeferson.combat.view.view.enumeration.GameStatus
+import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.Owner
-import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
-import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
 import dagger.android.AndroidInjection
 import javax.inject.Inject
@@ -97,17 +97,17 @@ class GameActivity : AppCompatActivity() {
     private fun observe() {
         viewModel.messages.observe(this, Observer { it?.let { handleChatMessage(it) } })
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
-        viewModel.placedPieceCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog() } })
+        viewModel.placedCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog(it.copy()) } })
+        viewModel.placedPiece.observe(this, Observer { it?.let { boardAdapter.placePiece(it) } })
     }
 
     private fun handleChatMessage(message: ChatMessage) {
         chatAdapter.addMessage(message)
     }
 
-    private fun handleStatusChange(status: GameViewModel.Status) {
+    private fun handleStatusChange(status: GameStatus) {
 
         val logMessage = when(status) {
-            NONE -> ""
             CONNECTING -> "Conectando ao servidor..."
             CONNECTED -> "Conectado"
             DISCONNECTED -> "Desconectado"
@@ -120,10 +120,11 @@ class GameActivity : AppCompatActivity() {
 
     }
 
-    private fun presentPlacePickerDialog() {
+    private fun presentPlacePickerDialog(coordinates: Coordinates) {
 
         val kinds = viewModel
                 .availablePieces
+                .filter { it.value > 0 }
                 .map { it.key }
                 .sortedByDescending { it.toString() }
                 .reversed()
@@ -137,13 +138,9 @@ class GameActivity : AppCompatActivity() {
                 .Builder(this)
                 .setTitle(getString(R.string.select_a_piece))
                 .setItems(items, { _, index ->
-                    didSelectPieceToPlace(kinds[index])
+                    viewModel.selectPiece(kinds[index], coordinates)
                 })
                 .show()
-
-    }
-
-    private fun didSelectPieceToPlace(kind: PieceKind) {
 
     }
 

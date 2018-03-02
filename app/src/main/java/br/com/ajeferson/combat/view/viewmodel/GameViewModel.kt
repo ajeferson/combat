@@ -4,60 +4,69 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableField
 import br.com.ajeferson.combat.view.extension.value
-import br.com.ajeferson.combat.view.service.connection.ConnectionManager
+import br.com.ajeferson.combat.view.service.connection.GameService
 import br.com.ajeferson.combat.view.service.model.ChatMessage
-import br.com.ajeferson.combat.view.service.repository.ChatRepository
-import br.com.ajeferson.combat.view.service.connection.ConnectionManager.ConnectionStatus
 import br.com.ajeferson.combat.view.service.message.MessageKind
 import br.com.ajeferson.combat.view.service.model.Coordinates
 import br.com.ajeferson.combat.view.service.model.Piece
+import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
-import br.com.ajeferson.combat.view.view.enumeration.Owner.*
+import br.com.ajeferson.combat.view.view.enumeration.GameStatus
+import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
-import br.com.ajeferson.combat.view.viewmodel.GameViewModel.Status.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
 /**
  * Created by ajeferson on 20/02/2018.
  */
-class GameViewModel(private val connectionManager: ConnectionManager,
-                    private val chatRepository: ChatRepository): ViewModel() {
+class GameViewModel(private val gameService: GameService): ViewModel() {
 
     val messages = MutableLiveData<ChatMessage>()
-    val status = ObservableField(Status.DISCONNECTED)
-    val liveStatus = MutableLiveData<Status>()
+    val status = ObservableField(DISCONNECTED)
+    val liveStatus = MutableLiveData<GameStatus>()
 
-    val placedPieceCoordinates = MutableLiveData<Coordinates>()
+    val placedCoordinates = MutableLiveData<Coordinates>()
+    val placedPiece = MutableLiveData<PieceCoordinatesDto>()
+
+    val pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
 
     private val initialAvailablePieces = mapOf(
-            SOLDIER to 8,
-            BOMB to 6,
-            GUNNER to 5,
-            SERGEANT to 4,
-            TENANT to 4,
-            CAPTAIN to 4,
-            MAJOR to 3,
-            COLONEL to 2,
-            GENERAL to 1,
-            MARSHAL to 1,
-            SPY to 1,
-            PRISONER to 1
+//            SOLDIER to 8,
+//            BOMB to 6,
+//            GUNNER to 5,
+//            SERGEANT to 4,
+//            TENANT to 4,
+//            CAPTAIN to 4,
+//            MAJOR to 3,
+//            COLONEL to 2,
+//            GENERAL to 1,
+//            MARSHAL to 1,
+//            SPY to 1,
+//            PRISONER to 1
+            SOLDIER to 1,
+            BOMB to 1
     )
 
     var availablePieces = mutableMapOf<PieceKind, Int>()
 
-    private fun setStatus(status: Status) {
+    private fun setStatus(status: GameStatus) {
         liveStatus.value = status
         this.status.value = status
     }
 
+
+
+    /**
+     * Life Cycle
+     * */
+
     fun onCreate() {
-        subscribeToConnectionStatus()
-        subscribeToChat()
-        subscribeToMessages()
+        subscribeToStatus()
+        subscribeToChats()
+        subscribeToPlacedPieces()
     }
 
     fun onStart() {
@@ -71,67 +80,86 @@ class GameViewModel(private val connectionManager: ConnectionManager,
 
     }
 
-    private fun subscribeToChat() {
-        chatRepository
-                .messages
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    messages.value = it
-                }
+
+
+
+
+    /**
+     * Subscriptions
+     * */
+
+    private fun subscribeToChats() {
     }
 
-    private fun subscribeToConnectionStatus() {
-        connectionManager
+    private fun subscribeToStatus() {
+        gameService
                 .status
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    setStatus(when(it) {
-                        ConnectionStatus.CONNECTING -> CONNECTING
-                        ConnectionStatus.CONNECTED -> CONNECTED
-                        else -> DISCONNECTED
-                    })
-                }, {
-                    // TODO Handle this
-                    setStatus(DISCONNECTED)
-                })
-    }
 
-    private fun subscribeToMessages() {
-        connectionManager
-                .messages
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
+                    setStatus(it)
 
-                    if(it.kind.isChat) {
-                        return@subscribe
-                    }
-
-                    // TODO Refactor
-                    setStatus(when(it.kind) {
-                        MessageKind.WAIT_OPPONENT -> WAITING_OPPONENT
-                        MessageKind.OPPONENT_GIVE_UP -> OPPONENT_GIVE_UP
-                        MessageKind.PLACE_PIECES -> {
+                    when(it) {
+                        PLACING_PIECES -> {
                             resetAvailablePieces()
-                            PLACING_PIECES
                         }
-                        MessageKind.CHAT -> NONE
-                    })
+                        else -> Unit
+                    }
 
                 }, {
                     // TODO Handle
                 })
     }
 
-    fun onConnectTouched() {
-        connectionManager.connect()
+    private fun subscribeToPlacedPieces() {
+        gameService
+                .placedPieces
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    placedPiece.value = it
+                }
     }
 
 
+
+    /**
+     * Pieces Placing
+     * */
+
     private fun resetAvailablePieces() {
         initialAvailablePieces.forEach { availablePieces[it.key] = it.value }
+    }
+
+    fun selectPiece(pieceKind: PieceKind, coordinates: Coordinates) {
+
+        // Reduce the current amount
+        val oldAmount = availablePieces[pieceKind] ?: return
+        availablePieces[pieceKind] = oldAmount - 1
+
+        // Build the message
+        val message = MessageKind
+                .PLACE_PIECE
+                .message
+                .apply { addValues(pieceKind.toString()) } // Add the kind
+                .apply { addValues(coordinates.row) }
+                .apply { addValues(coordinates.column) }
+
+        // Send the message
+        gameService.sendMessage(message)
+
+    }
+
+
+
+
+    /**
+     * View Actions
+     * */
+
+    fun onConnectTouched() {
+        gameService.connect()
     }
 
     val didClickPiece: (Int, Int) -> Unit = click@ { row, column ->
@@ -139,12 +167,8 @@ class GameViewModel(private val connectionManager: ConnectionManager,
         val status = this.status.value ?: return@click
 
         if(status.isPlacingPieces) {
-            placedPieceCoordinates.value = Coordinates(row, column)
+            placedCoordinates.value = Coordinates(row, column)
         }
-
-    }
-
-    fun selectPiece(pieceKind: PieceKind) {
 
     }
 
@@ -160,25 +184,5 @@ class GameViewModel(private val connectionManager: ConnectionManager,
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND)
     )
-
-    val pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
-
-    init {
-        pieces[0][0] = Piece(COLONEL, SELF)
-    }
-
-
-    enum class Status {
-        NONE,
-        DISCONNECTED,           // Not connected to server at all
-        CONNECTING,             // Waiting for a response to the connection request
-        CONNECTED,              // Connected to server
-        WAITING_OPPONENT,       // Waiting for the opponent to connect
-        OPPONENT_GIVE_UP,       // Opponent has given up
-        PLACING_PIECES;         // Should now starting placing pieces
-
-        val isPlacingPieces get() = this == PLACING_PIECES
-
-    }
 
 }

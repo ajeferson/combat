@@ -7,11 +7,13 @@ enum class MessageKind {
 
     WAIT_OPPONENT,
     OPPONENT_GIVE_UP,
+    PLACE_PIECE,
     PLACE_PIECES,
     CHAT;
 
     val message get() = Message(kind = this)
     val isChat get() = this == CHAT
-    val isPlacePiece get() = this == PLACE_PIECES
+    val isPlacePieces get() = this == PLACE_PIECES
+    val isPlacePiece get() = this == PLACE_PIECE
 
 }
