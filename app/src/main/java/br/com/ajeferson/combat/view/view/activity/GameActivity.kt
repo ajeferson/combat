@@ -111,6 +111,7 @@ class GameActivity : AppCompatActivity() {
             GameViewModel.Error.PLACE_PIECE_INVALID_COORDINATES -> presentErrorAlert("You can not place a piece here")
             GameViewModel.Error.ALREADY_CONNECTED -> presentErrorAlert("You are already connected to the server")
             GameViewModel.Error.ALREADY_DISCONNECTED -> presentErrorAlert("You are already disconnected")
+            GameViewModel.Error.MOVE -> presentErrorAlert("Bad move")
         }
     }
 
@@ -150,7 +151,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     private fun handleMove(move: Move) {
-        boardAdapter.makeMove(mo)
+        boardAdapter.makeMove(move)
     }
 
     private fun presentPlacePickerDialog(coordinates: Coordinates) {

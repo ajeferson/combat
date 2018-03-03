@@ -11,10 +11,13 @@ import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
+import br.com.ajeferson.combat.view.view.enumeration.Owner
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Created by ajeferson on 20/02/2018.
@@ -35,17 +38,17 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     var moveCoordinate: Coordinates? = null
 
     private val initialAvailablePieces = mapOf(
-//            SOLDIER to 8,
-//            BOMB to 6,
-//            GUNNER to 5,
-//            SERGEANT to 4,
-//            TENANT to 4,
-//            CAPTAIN to 4,
-//            MAJOR to 3,
-//            COLONEL to 2,
-//            GENERAL to 1,
-//            MARSHAL to 1,
-//            SPY to 1,
+            SOLDIER to 1,//8,
+            BOMB to 1,//6,
+            GUNNER to 1,//5,
+            SERGEANT to 1,//4,
+            TENANT to 1,//4,
+            CAPTAIN to 1,//4,
+            MAJOR to 1,//3,
+            COLONEL to 1,//2,
+            GENERAL to 1,
+            MARSHAL to 1,
+            SPY to 1,
             PRISONER to 1
     )
 
@@ -224,23 +227,104 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 return@click
             }
             placedCoordinates.value = coordinates
+            return@click
         }
 
         // TODO Validate moveCoordinate
         if(status.isTurn) {
+
             if(moveCoordinate == null) { // Select piece to moveCoordinate
+
+                if(!isMoveValid(coordinates, null)) {
+                    error.value = Error.MOVE
+                    return@click
+                }
+
                 moveCoordinate = coordinates
+
             } else {
+
+                if(!isMoveValid(moveCoordinate!!, coordinates)) {
+                    error.value = Error.MOVE
+                    return@click
+                }
+
                 gameService.sendMove(moveCoordinate!!, coordinates)
                 moveCoordinate = null
+
             }
+
+            return@click
+
         }
+
+    }
+
+    private fun isMoveValid(from: Coordinates, to: Coordinates?): Boolean {
+
+
+        /**
+         * First step
+         * */
+
+        run {
+
+            val (row, column) = from
+
+            if(board[row][column] == WATER || pieces[row][column]?.owner != Owner.SELF ||
+                    pieces[row][column]?.kind == BOMB || pieces[row][column]?.kind == PRISONER) {
+                return false
+            }
+
+        }
+
+        /**
+         * Second Step
+         * */
+
+        run {
+
+            if(to == null) {
+                return true
+            }
+
+            val (row, column) = to
+
+            // Not water and not over a self piece
+            if(board[row][column] == WATER || pieces[row][column]?.owner == Owner.SELF) {
+                return false
+            }
+
+            val kind = pieces[from.row][from.column]?.kind ?: return false
+
+            // Soldier can go everywhere
+            // TODO can not jump over other pieces
+            if(kind == SOLDIER) {
+
+                val rowDiff = abs(from.row - to.row)
+                val columnDiff = abs(from.column - to.column)
+
+                if((rowDiff > 0) xor (columnDiff > 0)) {
+                    val change = max(rowDiff, columnDiff)
+                    return change == 1 || pieces[row][column] == null
+                }
+
+                return false
+
+            }
+
+            return (abs(from.row - to.row) + abs(from.column - to.column)) == 1
+
+        }
+
+
 
     }
 
     private fun resetGame() {
         pieces = (0 until 10).map { arrayOfNulls<Piece>(10).toMutableList() }.toMutableList()
         initialAvailablePieces.forEach { availablePieces[it.key] = it.value }
+        moveCoordinate = null
     }
 
     val board: List<List<BoardItemKind>> = listOf(
@@ -259,7 +343,8 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     enum class Error {
         PLACE_PIECE_INVALID_COORDINATES,
         ALREADY_CONNECTED,
-        ALREADY_DISCONNECTED
+        ALREADY_DISCONNECTED,
+        MOVE
     }
 
 }
