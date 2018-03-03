@@ -27,27 +27,30 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     val error = MutableLiveData<Error>()
     val move = MutableLiveData<Move>()
     val strikes = MutableLiveData<Strike>()
+    val restarts = MutableLiveData<Restart>()
+
+    private var restarting = false
 
     val placedCoordinates = MutableLiveData<Coordinates>()
     val placedPiece = MutableLiveData<PieceCoordinatesDto>()
 
     lateinit var pieces: MutableList<MutableList<Piece?>>
 
-    var moveCoordinate: Coordinates? = null
+    private var moveCoordinate: Coordinates? = null
 
     private val initialAvailablePieces = mapOf(
-            SOLDIER to 1,//8,
-            BOMB to 1,//6,
-            GUNNER to 1,//5,
-            SERGEANT to 1,//4,
-            TENANT to 1,//4,
-            CAPTAIN to 1,//4,
-            MAJOR to 1,//3,
-            COLONEL to 1,//2,
-            GENERAL to 1,
-            MARSHAL to 1,
-            SPY to 1,
-            PRISONER to 1
+            SOLDIER to 1//8,
+//            BOMB to 1,//6,
+//            GUNNER to 1,//5,
+//            SERGEANT to 1,//4,
+//            TENANT to 1,//4,
+//            CAPTAIN to 1,//4,
+//            MAJOR to 1,//3,
+//            COLONEL to 1,//2,
+//            GENERAL to 1,
+//            MARSHAL to 1,
+//            SPY to 1,
+//            PRISONER to 1
     )
 
     var availablePieces = mutableMapOf<PieceKind, Int>()
@@ -73,6 +76,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         subscribeToPlacedPieces()
         subscribeToMoves()
         subscribeToStrikes()
+        subscribeToRestarts()
     }
 
     fun onStart() {
@@ -148,6 +152,19 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 }
     }
 
+    private fun subscribeToRestarts() {
+        gameService
+                .restarts
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    restarts.value = it
+                    if(it.kind != RestartKind.REQUEST) {
+                        restarting = false
+                    }
+                }
+    }
+
 
     /**
      * Pieces Placing
@@ -200,27 +217,35 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
      * */
 
     fun onConnectTouched() {
-
         if(status.value == CONNECTING) return
-
         if(status.value != DISCONNECTED) {
             error.value = Error.ALREADY_CONNECTED
             return
         }
-
         gameService.connect()
-
     }
 
     fun onGiveUpTouched() {
-
         if(status.value == null || status.value == DISCONNECTED) {
             error.value = Error.ALREADY_DISCONNECTED
             return
         }
-
         gameService.disconnect()
+    }
 
+    fun onRestartTouched() {
+        if(status.value != TURN && status.value != OPPONENT_TURN && status.value != PLACING_PIECES) {
+            return
+        }
+        if(restarting) {
+            error.value = Error.ALREADY_RESTARTING
+        }
+        restarting = true
+        gameService.restart()
+    }
+
+    fun answerRestartRequest(accepted: Boolean) {
+        gameService.answerRestartRequest(accepted)
     }
 
     val didClickPiece: (Int, Int) -> Unit = click@ { row, column ->
@@ -376,6 +401,11 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         moveCoordinate = null
     }
 
+    fun restartReset() {
+        resetGame()
+        setStatus(PLACING_PIECES)
+    }
+
     val board: List<List<BoardItemKind>> = listOf(
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
             listOf(LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND, LAND),
@@ -393,6 +423,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         PLACE_PIECE_INVALID_COORDINATES,
         ALREADY_CONNECTED,
         ALREADY_DISCONNECTED,
+        ALREADY_RESTARTING,
         MOVE
     }
 

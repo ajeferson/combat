@@ -11,16 +11,21 @@ import io.reactivex.subjects.Subject
 interface GameService {
 
     val connection: Any
+
     val status: Subject<GameStatus>
     val chats: Subject<ChatMessage>
     val placedPieces: Subject<PieceCoordinatesDto>
     val moves: Subject<Move>
     val strikes: Subject<Strike>
+    val restarts: Subject<Restart>
 
     var id: Long
 
     fun connect()
     fun disconnect()
+    fun restart()
+    fun answerRestartRequest(accepted: Boolean)
+
     fun sendMessage(message: Message)
     fun sendMove(from: Coordinates, to: Coordinates)
     fun sendStrike(from: Coordinates, to: Coordinates)

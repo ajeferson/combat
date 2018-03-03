@@ -16,12 +16,14 @@ import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.model.Coordinates
+import br.com.ajeferson.combat.view.service.model.Restart
 import br.com.ajeferson.combat.view.service.model.Strike
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.Owner
+import br.com.ajeferson.combat.view.view.enumeration.RestartKind
 import br.com.ajeferson.combat.view.view.enumeration.beats
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
@@ -93,6 +95,7 @@ class GameActivity : AppCompatActivity() {
         when(item?.itemId) {
             R.id.menu_connect -> viewModel.onConnectTouched()
             R.id.menu_give_up -> viewModel.onGiveUpTouched()
+            R.id.menu_restart -> viewModel.onRestartTouched()
             else -> Unit
         }
         return true
@@ -106,6 +109,7 @@ class GameActivity : AppCompatActivity() {
         viewModel.error.observe(this, Observer { it?.let { handleError(it) } })
         viewModel.move.observe(this, Observer { it?.let { handleMove() } })
         viewModel.strikes.observe(this, Observer { it?.let { handleStrike(it) } })
+        viewModel.restarts.observe(this, Observer { it?.let { handleRestart(it) } })
     }
 
     private fun handleError(error: GameViewModel.Error) {
@@ -113,6 +117,7 @@ class GameActivity : AppCompatActivity() {
             GameViewModel.Error.PLACE_PIECE_INVALID_COORDINATES -> presentErrorAlert("You can not place a piece here")
             GameViewModel.Error.ALREADY_CONNECTED -> presentErrorAlert("You are already connected to the server")
             GameViewModel.Error.ALREADY_DISCONNECTED -> presentErrorAlert("You are already disconnected")
+            GameViewModel.Error.ALREADY_RESTARTING -> presentErrorAlert("There already is a restart request in progress")
             GameViewModel.Error.MOVE -> presentErrorAlert("Bad move")
         }
     }
@@ -181,6 +186,24 @@ class GameActivity : AppCompatActivity() {
 
     }
 
+    private fun handleRestart(restart: Restart) {
+        when(restart.kind) {
+            RestartKind.REQUEST -> presentRestartRequestAlert()
+            RestartKind.REJECTED -> presentErrorAlert("Your restart request was declined")
+            RestartKind.ACCEPTED -> {
+                restartAccepted()
+                presentAlert("Success", "Your restart request was accepted")
+            }
+        }
+    }
+
+    private fun restartAccepted() {
+        chatAdapter.clearMessages()
+        chatAdapter.addMessage(ChatMessage("Match restarted", Owner.SERVER))
+        viewModel.restartReset()
+        boardAdapter.pieces = viewModel.pieces
+    }
+
     private fun presentPlacePickerDialog(coordinates: Coordinates) {
 
         val kinds = viewModel
@@ -203,6 +226,19 @@ class GameActivity : AppCompatActivity() {
                 })
                 .show()
 
+    }
+
+    private fun presentRestartRequestAlert() {
+        AlertDialog
+                .Builder(this)
+                .setTitle("Restart")
+                .setMessage("You opponent wants to restart this match. Proceed?")
+                .setPositiveButton("OK", { _, _ ->
+                    restartAccepted()
+                    viewModel.answerRestartRequest(true)
+                })
+                .setNegativeButton("Cancel", { _, _ ->  viewModel.answerRestartRequest(false) })
+                .show()
     }
 
     private fun presentErrorAlert(message: String) {

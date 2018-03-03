@@ -12,5 +12,10 @@
         android:title="@string/give_up"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/menu_restart"
+        android:title="@string/restart"
+        app:showAsAction="ifRoom" />
+
 
 </menu>

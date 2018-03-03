@@ -14,9 +14,13 @@ enum class MessageKind {
     OPPONENT_TURN,
     MOVE,
     STRIKE,
+    RESTART_REQUEST,
+    RESTART_ACCEPTED,
+    RESTART_REJECTED,
     CHAT;
 
     val message get() = Message(kind = this)
+
     val isChat get() = this == CHAT
     val isPlacePieces get() = this == PLACE_PIECES
     val isPlacePiece get() = this == PLACE_PIECE

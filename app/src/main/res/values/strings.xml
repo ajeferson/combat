@@ -18,5 +18,6 @@
     <string name="general">General</string>
     <string name="select_a_piece">Select a piece</string>
     <string name="give_up">Give up</string>
+    <string name="restart">Restart</string>
 
 </resources>

@@ -9,6 +9,7 @@ import br.com.ajeferson.combat.view.service.model.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind
+import br.com.ajeferson.combat.view.view.enumeration.RestartKind
 import io.reactivex.Completable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
@@ -26,6 +27,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     override val placedPieces: Subject<PieceCoordinatesDto> = PublishSubject.create()
     override val moves: Subject<Move> = PublishSubject.create()
     override val strikes: Subject<Strike> = PublishSubject.create()
+    override val restarts: Subject<Restart> = PublishSubject.create()
 
     override var id: Long = -1L
 
@@ -70,6 +72,15 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
                 .subscribe {
                     socket.close()
                 }
+    }
+
+    override fun restart() {
+        sendMessage(MessageKind.RESTART_REQUEST.message)
+    }
+
+    override fun answerRestartRequest(accepted: Boolean) {
+        val kind = if(accepted) MessageKind.RESTART_ACCEPTED else RESTART_REJECTED
+        sendMessage(kind.message)
     }
 
     override fun sendMessage(message: Message) {
@@ -122,6 +133,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
             PLACE_PIECE -> handlePlacePieceMessage(message)
             MOVE -> handleMoveMessage(message)
             STRIKE -> handleStrikeMessage(message)
+            RESTART_REQUEST, RESTART_ACCEPTED, RESTART_REJECTED -> handleRestartMessage(message)
             else -> Unit
         }
 
@@ -177,6 +189,15 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
         val strike = Strike(from, to)
         strikes.onNext(strike)
 
+    }
+
+    private fun handleRestartMessage(message: Message) {
+        val kind = when(message.kind) {
+            RESTART_REQUEST -> RestartKind.REQUEST
+            RESTART_ACCEPTED -> RestartKind.ACCEPTED
+            else -> RestartKind.REJECTED
+        }
+        restarts.onNext(Restart(kind))
     }
 
     private fun emitStatus(newStatus: GameStatus?) {
