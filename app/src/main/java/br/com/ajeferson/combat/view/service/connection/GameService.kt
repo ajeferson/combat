@@ -29,6 +29,7 @@ interface GameService {
     fun sendMessage(message: Message)
     fun sendMove(from: Coordinates, to: Coordinates)
     fun sendStrike(from: Coordinates, to: Coordinates)
+    fun sendChat(text: String)
 
     // One for each Message Kind
     fun waitForOpponent()

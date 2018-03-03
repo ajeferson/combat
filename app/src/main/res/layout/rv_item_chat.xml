@@ -5,6 +5,8 @@
 
     <data>
 
+        <import type="android.view.View" />
+
         <variable
             name="message"
             type="br.com.ajeferson.combat.view.service.model.ChatMessage" />
@@ -33,6 +35,21 @@
             app:layout_constraintVertical_bias="0.0">
 
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/montserrat"
+                android:text="@{message.kind.description}"
+                android:visibility="@{message.kind.isServer ? View.GONE : View.VISIBLE}"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/message_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -43,11 +60,11 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:fontFamily="@font/montserrat"
-                android:textAlignment="textEnd"
                 android:gravity="end"
-                android:textSize="15sp"
-                tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean blandit purus lorem, a egestas arcu egestas vel. Vivamus convallis laoreet fringilla. Nam accumsan, dui ac mollis aliquet, sem sem suscipit metus, ac luctus odio nulla eu nulla. Donec a mattis purus. Aenean eget diam et eros sollicitudin pharetra. Aenean fringilla ultrices leo, sit amet auctor sem sagittis sit amet. Aenean ut aliquam mi. In id pharetra elit. Nunc eu urna eu magna sollicitudin faucibus."
-                android:text="@{message.text}"/>
+                android:text="@{message.text}"
+                android:textAlignment="textEnd"
+                android:textSize="18sp"
+                tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean blandit purus lorem, a egestas arcu egestas vel. Vivamus convallis laoreet fringilla. Nam accumsan, dui ac mollis aliquet, sem sem suscipit metus, ac luctus odio nulla eu nulla. Donec a mattis purus. Aenean eget diam et eros sollicitudin pharetra. Aenean fringilla ultrices leo, sit amet auctor sem sagittis sit amet. Aenean ut aliquam mi. In id pharetra elit. Nunc eu urna eu magna sollicitudin faucibus." />
 
             <TextView
                 android:id="@+id/message_date"

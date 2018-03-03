@@ -67,6 +67,7 @@ class GameActivity : AppCompatActivity() {
         boardAdapter.pieces = viewModel.pieces
         boardAdapter.onItemClick = viewModel.didClickPiece
 
+        binding.viewModel = viewModel
         binding.executePendingBindings()
 
     }

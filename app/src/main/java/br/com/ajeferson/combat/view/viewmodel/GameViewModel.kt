@@ -21,6 +21,7 @@ import kotlin.math.max
  */
 class GameViewModel(private val gameService: GameService): ViewModel() {
 
+    val text = ObservableField<String>()
     val messages = MutableLiveData<ChatMessage>()
     val status = ObservableField(DISCONNECTED)
     val liveStatus = MutableLiveData<GameStatus>()
@@ -99,6 +100,13 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
      * */
 
     private fun subscribeToChats() {
+        gameService
+                .chats
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    messages.value = it
+                }
     }
 
     private fun subscribeToStatus() {
@@ -242,6 +250,21 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         }
         restarting = true
         gameService.restart()
+    }
+
+    fun onSendTouched() {
+
+        if(status.value == null || status.value == DISCONNECTED || status.value == CONNECTING) {
+            return
+        }
+
+        if(text.value.trim().isEmpty()) {
+            return
+        }
+
+        gameService.sendChat(text.value.trim())
+        text.value = ""
+
     }
 
     fun answerRestartRequest(accepted: Boolean) {

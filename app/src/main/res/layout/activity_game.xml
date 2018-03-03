@@ -33,6 +33,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
             android:background="@android:color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
@@ -49,11 +50,53 @@
             android:id="@+id/chat_rv"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@android:color/holo_red_light"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/view_chat_box"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/game_rv"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/view_chat_box"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:background="@android:color/darker_gray"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/game_rv">
+
+            <EditText
+                android:id="@+id/messagees_et"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_weight="1"
+                android:background="@android:color/white"
+                android:ems="10"
+                android:fontFamily="@font/montserrat"
+                android:hint="Type your message"
+                android:inputType="none"
+                android:paddingLeft="10dp"
+                android:paddingStart="10dp"
+                android:text="@={viewModel.text}" />
+
+            <Button
+                android:id="@+id/send_btn"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Enviar"
+                android:onClick="@{() -> viewModel.onSendTouched() }"
+                android:clickable="true"
+                android:focusable="true"
+                tools:layout_editor_absoluteX="510dp"
+                tools:layout_editor_absoluteY="275dp" />
+
+        </LinearLayout>
 
 
     </android.support.constraint.ConstraintLayout>

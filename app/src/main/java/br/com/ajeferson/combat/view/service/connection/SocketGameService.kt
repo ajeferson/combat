@@ -94,6 +94,11 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
                 }
     }
 
+    override fun sendChat(text: String) {
+        val message = MessageKind.CHAT.message.apply { addValues(text) }
+        sendMessage(message)
+    }
+
     override fun sendMove(from: Coordinates, to: Coordinates) {
         val message = MessageKind.MOVE.message
                 .apply { addValues(from.row, from.column) } // From
