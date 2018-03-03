@@ -7,12 +7,9 @@ import br.com.ajeferson.combat.view.extension.value
 import br.com.ajeferson.combat.view.service.connection.GameService
 import br.com.ajeferson.combat.view.service.message.MessageKind
 import br.com.ajeferson.combat.view.service.model.*
-import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
+import br.com.ajeferson.combat.view.view.enumeration.*
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
-import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
-import br.com.ajeferson.combat.view.view.enumeration.Owner
-import br.com.ajeferson.combat.view.view.enumeration.PieceKind
 import br.com.ajeferson.combat.view.view.enumeration.PieceKind.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -28,7 +25,8 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     val status = ObservableField(DISCONNECTED)
     val liveStatus = MutableLiveData<GameStatus>()
     val error = MutableLiveData<Error>()
-    var move = MutableLiveData<Move>()
+    val move = MutableLiveData<Move>()
+    val strikes = MutableLiveData<Strike>()
 
     val placedCoordinates = MutableLiveData<Coordinates>()
     val placedPiece = MutableLiveData<PieceCoordinatesDto>()
@@ -74,6 +72,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         subscribeToChats()
         subscribeToPlacedPieces()
         subscribeToMoves()
+        subscribeToStrikes()
     }
 
     fun onStart() {
@@ -135,10 +134,19 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    move.value = it
+                    didMove(it)
                 }
     }
 
+    private fun subscribeToStrikes() {
+        gameService
+                .strikes
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    didStrike(it)
+                }
+    }
 
 
     /**
@@ -249,7 +257,12 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                     return@click
                 }
 
-                gameService.sendMove(moveCoordinate!!, coordinates)
+                if(pieces[coordinates.row][coordinates.column]?.owner == Owner.OPPONENT) {
+                    gameService.sendStrike(moveCoordinate!!, coordinates)
+                } else {
+                    gameService.sendMove(moveCoordinate!!, coordinates)
+                }
+
                 moveCoordinate = null
 
             }
@@ -318,6 +331,42 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         }
 
 
+
+    }
+
+    private fun didMove(move: Move) {
+        val (from, to) = move
+        pieces[to.row][to.column] = pieces[from.row][from.column]
+        pieces[from.row][from.column] = null
+        this.move.value = move
+    }
+
+    private fun didStrike(strike: Strike) {
+
+        val (from, to) = strike
+
+        val striker = pieces[from.row][from.column]?.kind ?: return
+        val defender = pieces[to.row][to.column]?.kind ?: return
+
+        strike.striker = striker
+        strike.defender = defender
+        strike.owner = pieces[from.row][from.column]?.owner
+
+        when(striker beats defender) {
+            null -> { // Tie
+                pieces[from.row][from.column] = null
+                pieces[to.row][to.column] = null
+            }
+            true -> { // Win
+                pieces[to.row][to.column] = pieces[from.row][from.column]
+                pieces[from.row][from.column] = null
+            }
+            false -> { // Lose
+                pieces[from.row][from.column] = null
+            }
+        }
+
+        this.strikes.value = strike
 
     }
 

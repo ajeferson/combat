@@ -16,12 +16,13 @@ import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.ActivityGameBinding
 import br.com.ajeferson.combat.view.service.model.ChatMessage
 import br.com.ajeferson.combat.view.service.model.Coordinates
-import br.com.ajeferson.combat.view.service.model.Move
+import br.com.ajeferson.combat.view.service.model.Strike
 import br.com.ajeferson.combat.view.view.adapter.BoardRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.adapter.ChatRecyclerViewAdapter
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus.*
 import br.com.ajeferson.combat.view.view.enumeration.Owner
+import br.com.ajeferson.combat.view.view.enumeration.beats
 import br.com.ajeferson.combat.view.viewmodel.GameViewModel
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
 import dagger.android.AndroidInjection
@@ -101,9 +102,10 @@ class GameActivity : AppCompatActivity() {
         viewModel.messages.observe(this, Observer { it?.let { handleChatMessage(it) } })
         viewModel.liveStatus.observe(this, Observer { it?.let { handleStatusChange(it) } })
         viewModel.placedCoordinates.observe(this, Observer { it?.let { presentPlacePickerDialog(it) } })
-        viewModel.placedPiece.observe(this, Observer { it?.let { boardAdapter.placePiece(it) } })
+        viewModel.placedPiece.observe(this, Observer { it?.let { handlePlacedPiece() } })
         viewModel.error.observe(this, Observer { it?.let { handleError(it) } })
-        viewModel.move.observe(this, Observer { it?.let { handleMove(it) } })
+        viewModel.move.observe(this, Observer { it?.let { handleMove() } })
+        viewModel.strikes.observe(this, Observer { it?.let { handleStrike(it) } })
     }
 
     private fun handleError(error: GameViewModel.Error) {
@@ -150,8 +152,33 @@ class GameActivity : AppCompatActivity() {
 
     }
 
-    private fun handleMove(move: Move) {
-        boardAdapter.makeMove(move)
+    private fun handlePlacedPiece() {
+        boardAdapter.pieces = viewModel.pieces
+    }
+
+    private fun handleMove() {
+        boardAdapter.pieces = viewModel.pieces
+    }
+
+    private fun handleStrike(strike: Strike) {
+
+        boardAdapter.pieces = viewModel.pieces
+
+        val striker = strike.striker ?: return
+        val defender = strike.defender ?: return
+        val owner = strike.owner ?: return
+
+        val result = when(striker beats defender) {
+            null -> "It' a tie"
+            true -> if(owner == Owner.SELF) "You win" else "You lose"
+            false -> if(owner == Owner.SELF) "You lose" else "You win"
+        }
+
+        val strikerDesc = getString(striker.descriptionId)
+        val defenderDesc = getString(defender.descriptionId)
+
+        presentAlert("Result", "$strikerDesc vs $defenderDesc: $result")
+
     }
 
     private fun presentPlacePickerDialog(coordinates: Coordinates) {

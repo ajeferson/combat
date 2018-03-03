@@ -2,15 +2,12 @@ package br.com.ajeferson.combat.view.view.adapter
 
 import android.databinding.DataBindingUtil
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import br.com.ajeferson.combat.R
 import br.com.ajeferson.combat.databinding.RvItemBoardBinding
 import br.com.ajeferson.combat.view.service.model.Coordinates
-import br.com.ajeferson.combat.view.service.model.Move
 import br.com.ajeferson.combat.view.service.model.Piece
-import br.com.ajeferson.combat.view.service.model.PieceCoordinatesDto
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
 
 /**
@@ -18,7 +15,7 @@ import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind
  */
 class BoardRecyclerViewAdapter(
         board: List<List<BoardItemKind>>,
-        pieces: MutableList<MutableList<Piece?>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
+        pieces: List<List<Piece?>>): RecyclerView.Adapter<BoardRecyclerViewAdapter.ViewHolder>() {
 
     var board = board
         set(value) {
@@ -47,20 +44,6 @@ class BoardRecyclerViewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val (row, column) = position.toCoordinates(size)
         holder.bind(board[row][column], pieces[row][column], row, column, onItemClick)
-    }
-
-    fun placePiece(dto: PieceCoordinatesDto) {
-        val (row, colum) = dto.coordinates
-        pieces[row][colum] = dto.piece.copy()
-        notifyDataSetChanged()
-    }
-
-    fun makeMove(move: Move) {
-        val (from, to) = move
-        val temp = pieces[from.row][from.column]
-        pieces[from.row][from.column] = pieces[to.row][to.column]?.copy()
-        pieces[to.row][to.column] = temp?.copy()
-        notifyDataSetChanged()
     }
 
     class ViewHolder(private val binding: RvItemBoardBinding): RecyclerView.ViewHolder(binding.root) {

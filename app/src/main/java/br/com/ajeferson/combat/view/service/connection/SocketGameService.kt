@@ -25,6 +25,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     override val chats: Subject<ChatMessage> = PublishSubject.create()
     override val placedPieces: Subject<PieceCoordinatesDto> = PublishSubject.create()
     override val moves: Subject<Move> = PublishSubject.create()
+    override val strikes: Subject<Strike> = PublishSubject.create()
 
     override var id: Long = -1L
 
@@ -89,6 +90,14 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
         sendMessage(message)
     }
 
+    // TODO Dry this up
+    override fun sendStrike(from: Coordinates, to: Coordinates) {
+        val message = MessageKind.STRIKE.message
+                .apply { addValues(from.row, from.column) } // From
+                .apply { addValues(to.row, to.column) }     // To
+        sendMessage(message)
+    }
+
     private fun didReceive(message: Message) {
 
         emitStatus(when(message.kind) {
@@ -112,6 +121,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
             CHAT -> handleChatMessage(message)
             PLACE_PIECE -> handlePlacePieceMessage(message)
             MOVE -> handleMoveMessage(message)
+            STRIKE -> handleStrikeMessage(message)
             else -> Unit
         }
 
@@ -149,6 +159,23 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
 
         val move = Move(from, to)
         moves.onNext(move)
+
+    }
+
+
+    // TODO Dry this up
+    private fun handleStrikeMessage(message: Message) {
+
+        var row = message.tokens[0].toInt()
+        var column = message.tokens[1].toInt()
+        val from = Coordinates.newInstance(message.owner, row, column)
+
+        row = message.tokens[2].toInt()
+        column = message.tokens[3].toInt()
+        val to = Coordinates.newInstance(message.owner, row, column)
+
+        val strike = Strike(from, to)
+        strikes.onNext(strike)
 
     }
 
