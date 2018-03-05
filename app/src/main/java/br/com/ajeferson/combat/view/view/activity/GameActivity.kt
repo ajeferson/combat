@@ -130,15 +130,15 @@ class GameActivity : AppCompatActivity() {
     private fun handleStatusChange(status: GameStatus) {
 
         val logMessage = when(status) {
-            CONNECTING -> "Conectando ao servidor..."
-            CONNECTED -> "Conectado"
-            DISCONNECTED -> "Desconectado"
-            WAITING_OPPONENT -> "Esperando oponente..."
-            PLACING_PIECES -> "Posicione suas peças"
-            OPPONENT_GIVE_UP -> "Oponente desistiu"
+            CONNECTING -> "Connecting..."
+            CONNECTED -> "Connected"
+            DISCONNECTED -> "Disconnected"
+            WAITING_OPPONENT -> "Waiting opponent..."
+            PLACING_PIECES -> "Place your pieces"
+            OPPONENT_GIVE_UP -> "Opponent has given up"
             READY -> ""
-            TURN -> "Sua vez de jogar"
-            OPPONENT_TURN -> "Esperando jogada do oponente"
+            TURN -> "Your turn"
+            OPPONENT_TURN -> "Opponent's turn"
         }
 
         // Star over the game

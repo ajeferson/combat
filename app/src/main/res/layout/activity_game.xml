@@ -89,7 +89,7 @@
                 android:layout_width="60dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Enviar"
+                android:text="Send"
                 android:onClick="@{() -> viewModel.onSendTouched() }"
                 android:clickable="true"
                 android:focusable="true"

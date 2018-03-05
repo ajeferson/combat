@@ -23,7 +23,7 @@ class AppModule {
 
     companion object {
 
-        private const val SERVER_IP = "192.168.0.106"
+        private const val SERVER_IP = "172.20.10.2"
         private const val SERVER_PORT = 3000
 
     }

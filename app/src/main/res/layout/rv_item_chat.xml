@@ -83,7 +83,7 @@
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 tools:text="12:45h"
-                android:text="@{message.date.toString()}" />
+                android:text="@{message.localizedDate}" />
 
         </LinearLayout>
 

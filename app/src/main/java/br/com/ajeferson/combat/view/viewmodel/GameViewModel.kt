@@ -40,18 +40,18 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     private var moveCoordinate: Coordinates? = null
 
     private val initialAvailablePieces = mapOf(
-            SOLDIER to 1//8,
-//            BOMB to 1,//6,
-//            GUNNER to 1,//5,
-//            SERGEANT to 1,//4,
-//            TENANT to 1,//4,
-//            CAPTAIN to 1,//4,
-//            MAJOR to 1,//3,
-//            COLONEL to 1,//2,
-//            GENERAL to 1,
-//            MARSHAL to 1,
-//            SPY to 1,
-//            PRISONER to 1
+            SOLDIER to 8,
+            BOMB to 6,
+            GUNNER to 5,
+            SERGEANT to 4,
+            TENANT to 4,
+            CAPTAIN to 4,
+            MAJOR to 3,
+            COLONEL to 2,
+            GENERAL to 1,
+            MARSHAL to 1,
+            SPY to 1,
+            PRISONER to 1
     )
 
     var availablePieces = mutableMapOf<PieceKind, Int>()
