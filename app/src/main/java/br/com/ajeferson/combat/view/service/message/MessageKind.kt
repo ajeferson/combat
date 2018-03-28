@@ -5,10 +5,10 @@ package br.com.ajeferson.combat.view.service.message
  */
 enum class MessageKind {
 
-    WAIT_OPPONENT,
+    WAIT_OPPONENT, //
     OPPONENT_GIVE_UP,
     PLACE_PIECE,
-    PLACE_PIECES,
+    PLACE_PIECES, //
     READY,
     TURN,
     OPPONENT_TURN,

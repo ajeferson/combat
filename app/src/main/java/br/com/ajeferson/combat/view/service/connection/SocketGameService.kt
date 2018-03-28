@@ -15,12 +15,21 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import java.io.PrintWriter
+import java.net.ConnectException
 import java.util.*
 
 /**
  * Created by ajeferson on 25/02/2018.
  */
 class SocketGameService(private val ip: String, private val port: Int): GameService {
+
+    override fun ready() {
+        sendMessage(MessageKind.READY.message)
+    }
+
+    override fun placePiece(placedPiece: PlacedPiece) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override val status: Subject<GameStatus> = PublishSubject.create()
     override val chats: Subject<ChatMessage> = PublishSubject.create()
@@ -29,9 +38,9 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     override val strikes: Subject<Strike> = PublishSubject.create()
     override val restarts: Subject<Restart> = PublishSubject.create()
 
-    override var id: Long = -1L
+    override var id: Int = -1
 
-    override val connection get() = socket
+    val connection get() = socket
     private lateinit var socket: Socket
 
     private lateinit var reader: Scanner
@@ -55,13 +64,17 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
                 .complete()
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    emitStatus(CONNECTING)
-                    socket = Socket()
-                    socket.connect(InetSocketAddress(ip, port), 10000)
-                    reader = Scanner(socket.getInputStream())
-                    writer = PrintWriter(socket.getOutputStream())
-                    Thread(messagesListener).start()
-                    emitStatus(CONNECTED)
+                    try {
+                        emitStatus(CONNECTING)
+                        socket = Socket()
+                        socket.connect(InetSocketAddress(ip, port), 10000)
+                        reader = Scanner(socket.getInputStream())
+                        writer = PrintWriter(socket.getOutputStream())
+                        Thread(messagesListener).start()
+                        emitStatus(CONNECTED)
+                    } catch(e: ConnectException) {
+                        emitStatus(DISCONNECTED)
+                    }
                 }
     }
 
@@ -83,8 +96,8 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
         sendMessage(kind.message)
     }
 
-    override fun sendMessage(message: Message) {
-        message.senderId = id
+    fun sendMessage(message: Message) {
+        message.senderId = id.toLong()
         Completable
                 .complete()
                 .subscribeOn(Schedulers.io())
@@ -99,7 +112,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
         sendMessage(message)
     }
 
-    override fun sendMove(from: Coordinates, to: Coordinates) {
+    override fun move(from: Coordinates, to: Coordinates) {
         val message = MessageKind.MOVE.message
                 .apply { addValues(from.row, from.column) } // From
                 .apply { addValues(to.row, to.column) }     // To
@@ -107,7 +120,7 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     }
 
     // TODO Dry this up
-    override fun sendStrike(from: Coordinates, to: Coordinates) {
+    override fun strike(from: Coordinates, to: Coordinates) {
         val message = MessageKind.STRIKE.message
                 .apply { addValues(from.row, from.column) } // From
                 .apply { addValues(to.row, to.column) }     // To
@@ -127,10 +140,10 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
 
         if(message.kind.isPlacePieces) {
             val idStr = message.tokens[0] as String
-            id = idStr.toLong()
+            id = idStr.toInt()
         }
 
-        message.setOwnerFromId(id)
+        message.setOwnerFromId(id.toLong())
 
         // Dispatch to specific handlers
         when(message.kind) {
@@ -208,11 +221,6 @@ class SocketGameService(private val ip: String, private val port: Int): GameServ
     private fun emitStatus(newStatus: GameStatus?) {
         if(newStatus == null) return
         status.onNext(newStatus)
-    }
-
-    // RMI Implementation
-    override fun waitForOpponent() {
-        emitStatus(WAITING_OPPONENT)
     }
 
 }

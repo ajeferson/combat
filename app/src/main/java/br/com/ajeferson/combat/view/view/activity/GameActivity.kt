@@ -29,6 +29,8 @@ import br.com.ajeferson.combat.view.viewmodel.GameViewModel
 import br.com.ajeferson.combat.view.viewmodel.factory.GameViewModelFactory
 import dagger.android.AndroidInjection
 import javax.inject.Inject
+import java.io.IOException
+
 
 class GameActivity : AppCompatActivity() {
 
@@ -70,7 +72,45 @@ class GameActivity : AppCompatActivity() {
         binding.viewModel = viewModel
         binding.executePendingBindings()
 
+        Thread(Runnable {
+
+            try {
+
+//                val callHandler: CallHandler = CallHandler()
+//                val client: Client = Client("192.168.15.5", 7777, callHandler)
+////                client.
+//                val testService: TestService = client.getGlobal(TestService::class.java) as TestService
+////                client.
+//                val goat = testService.getGoat("Nice", 11)
+//                Log.d("LIPE", goat.description)
+//
+//                // Register own service
+//                val ch = CallHandler()
+//                val clientService: ClientService = ClientServiceImpl()
+//                ch.registerGlobal(ClientService::class.java, clientService)
+//                val server: Server = Server()
+//                server.bind(7777, ch)
+//
+//                val wm = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+//                val ip = Formatter.formatIpAddress(wm.connectionInfo.ipAddress)
+//                testService.sendIp(ip)
+//
+//                while(true) {
+//                    Thread.sleep(1000L)
+//                }
+
+
+
+            } catch(e: IOException) {
+                e.printStackTrace()
+            }
+
+
+        }).start()
+
     }
+
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.activity_game_menu, menu)

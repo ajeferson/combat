@@ -5,7 +5,6 @@ import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableField
 import br.com.ajeferson.combat.view.extension.value
 import br.com.ajeferson.combat.view.service.connection.GameService
-import br.com.ajeferson.combat.view.service.message.MessageKind
 import br.com.ajeferson.combat.view.service.model.*
 import br.com.ajeferson.combat.view.view.enumeration.*
 import br.com.ajeferson.combat.view.view.enumeration.BoardItemKind.*
@@ -40,18 +39,18 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
     private var moveCoordinate: Coordinates? = null
 
     private val initialAvailablePieces = mapOf(
-            SOLDIER to 8,
-            BOMB to 6,
-            GUNNER to 5,
-            SERGEANT to 4,
-            TENANT to 4,
-            CAPTAIN to 4,
-            MAJOR to 3,
-            COLONEL to 2,
-            GENERAL to 1,
-            MARSHAL to 1,
-            SPY to 1,
-            PRISONER to 1
+            SOLDIER to 1
+//            BOMB to 1,
+//            GUNNER to 1,
+//            SERGEANT to 1,
+//            TENANT to 1,
+//            CAPTAIN to 1,
+//            MAJOR to 1,
+//            COLONEL to 1,
+//            GENERAL to 1,
+//            MARSHAL to 1,
+//            SPY to 1,
+//            PRISONER to 1
     )
 
     var availablePieces = mutableMapOf<PieceKind, Int>()
@@ -179,18 +178,8 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
      * */
 
     fun selectPiece(pieceKind: PieceKind, coordinates: Coordinates) {
-
-        // Build the message
-        val message = MessageKind
-                .PLACE_PIECE
-                .message
-                .apply { addValues(pieceKind.toString()) } // Add the kind
-                .apply { addValues(coordinates.row) }
-                .apply { addValues(coordinates.column) }
-
-        // Send the message
-        gameService.sendMessage(message)
-
+        val placedPiece = PlacedPiece(pieceKind.toString(), coordinates.row, coordinates.column)
+        gameService.placePiece(placedPiece)
     }
 
     private fun placePiece(dto: PieceCoordinatesDto) {
@@ -212,7 +201,7 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
         // Ready to play
         if(availablePiecesCount == 0) {
             setStatus(READY)
-            gameService.sendMessage(MessageKind.READY.message)
+            gameService.ready()
         }
 
     }
@@ -306,9 +295,9 @@ class GameViewModel(private val gameService: GameService): ViewModel() {
                 }
 
                 if(pieces[coordinates.row][coordinates.column]?.owner == Owner.OPPONENT) {
-                    gameService.sendStrike(moveCoordinate!!, coordinates)
+                    gameService.strike(moveCoordinate!!, coordinates)
                 } else {
-                    gameService.sendMove(moveCoordinate!!, coordinates)
+                    gameService.move(moveCoordinate!!, coordinates)
                 }
 
                 moveCoordinate = null

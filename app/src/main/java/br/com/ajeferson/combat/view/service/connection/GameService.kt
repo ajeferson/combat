@@ -1,6 +1,5 @@
 package br.com.ajeferson.combat.view.service.connection
 
-import br.com.ajeferson.combat.view.service.message.Message
 import br.com.ajeferson.combat.view.service.model.*
 import br.com.ajeferson.combat.view.view.enumeration.GameStatus
 import io.reactivex.subjects.Subject
@@ -10,8 +9,6 @@ import io.reactivex.subjects.Subject
  */
 interface GameService {
 
-    val connection: Any
-
     val status: Subject<GameStatus>
     val chats: Subject<ChatMessage>
     val placedPieces: Subject<PieceCoordinatesDto>
@@ -19,22 +16,17 @@ interface GameService {
     val strikes: Subject<Strike>
     val restarts: Subject<Restart>
 
-    var id: Long
-
-    fun connect()
-    fun disconnect()
-    fun restart()
-    fun answerRestartRequest(accepted: Boolean)
-
-    fun sendMessage(message: Message)
-    fun sendMove(from: Coordinates, to: Coordinates)
-    fun sendStrike(from: Coordinates, to: Coordinates)
-    fun sendChat(text: String)
+    var id: Int
 
     // One for each Message Kind
-    fun waitForOpponent()
-//    fun opponentGiveUp()
-//    fun placePiece()
-//    ...
+    fun connect()
+    fun disconnect()
+    fun placePiece(placedPiece: PlacedPiece)
+    fun ready()
+    fun move(from: Coordinates, to: Coordinates)
+    fun strike(from: Coordinates, to: Coordinates)
+    fun sendChat(text: String)
+    fun restart()
+    fun answerRestartRequest(accepted: Boolean)
 
 }
