@@ -11,8 +11,6 @@ class ServerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_server)
-        //        val addr = InetAddress.getByName("127.0.0.1")
-//        val sock = ServerSocket(1234, addr)
     }
 
 

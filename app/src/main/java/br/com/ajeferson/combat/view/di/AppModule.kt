@@ -2,10 +2,8 @@ package br.com.ajeferson.combat.view.di
 
 import android.content.Context
 import br.com.ajeferson.combat.view.common.App
-import br.com.ajeferson.combat.view.rmi.RmiServerInterface
 import br.com.ajeferson.combat.view.service.connection.GameService
 import br.com.ajeferson.combat.view.service.connection.RmiGameService
-import br.com.ajeferson.combat.view.service.connection.SocketGameService
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -21,11 +19,11 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun provideConnectionManager(app: App): GameService = RmiGameService(app, SERVER_IP, SERVER_PORT)//SocketGameService(SERVER_IP, SERVER_PORT)
+    fun provideConnectionManager(app: App): GameService = RmiGameService(app, SERVER_IP, SERVER_PORT)
 
     companion object {
 
-        private const val SERVER_IP = "192.168.15.6"
+        private const val SERVER_IP = "192.168.1.126"
         private const val SERVER_PORT = 7777
 
     }
